@@ -1,0 +1,16 @@
+Report Meditimer versione 2.0.5 di luglio 2024
+Creato il 2024-08-06 16:17:36
+Giri registrati:
+Giro 1: 00:00:39.418 Giro più lento
+Giro 2: 00:00:07.319
+Giro 3: 00:00:04.113
+Giro 4: 00:00:02.095 Giro più veloce
+Giro 5: 00:00:06.882
+Giro 6: 00:00:07.836
+
+Giro più veloce: 00:00:02.095Giro più lento: 00:00:39.418
+Tempo medio: 00:00:11.277
+
+Tempo totale: 00:01:07.667Tempo trascorso globalmente: 00:01:34.276
+Tempo del cronometro in moto: 00:01:13.767
+Tempo complessivo di esecuzione: 00:01:38.466
