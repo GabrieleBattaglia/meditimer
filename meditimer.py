@@ -6,36 +6,48 @@
 
 import time
 import datetime
-import msvcrt
 import sys
-from GBUtils import menu
 
-VERSIONE = "2.0.5 di luglio 2024"
+# Cross-platform getch and kbhit
+try:
+    # Windows
+    import msvcrt
+    def kbhit():
+        return msvcrt.kbhit()
+    def getch():
+        return msvcrt.getch().decode('utf-8').lower()
+except ImportError:
+    # Unix-like
+    import termios
+    import tty
+    import select
+    def kbhit():
+        return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
+    def getch():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch.lower()
+
+VERSIONE = "2.1.0 di luglio 2024"
 MNMENU={'a':'per avviare/pausa',
 		's':'Per fermare',
 		'z':'Per azzerare',
 		'g':'Per registrare un giro',
 		'd':'Per mostrare la data',
 		'o':"Per mostrare l'ora",
-		'x':'Per tempo in cui il cronometro era in moto',
-		'c':'Per tempo trascorso globalmente',
+		'c':'Per tempo trascorso',
 		'v':'Per tempo complessivo di esecuzione',
 		'q':'Per uscire e salvare il report',
 		'?':'Per mostrare questo aiuto'}
-go = False
-stop = True
-crono = 0.0
-tpausa = 0.0
-giri = []
-start_time = None
-pause_time = None
-last_giro_time = None  # New variable to store the last lap time
-TINIZIO = time.time()
-TCRONOINIZIO = None  # New variable to store the start time of the first start of the cronometro
-TEMPO_PAUSE = 0.0  # Total pause time accumulated
 
 GIORNISETTIMANA = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
 MESIANNO = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
+TINIZIO = time.time()
 
 def stringa_tempo(t):
 	"""Riceve un tempo in secondi e rende una stringa formattata"""
@@ -45,70 +57,71 @@ def stringa_tempo(t):
 	hours = (int(t) // 3600)
 	return f"{hours:02}:{minutes:02}:{seconds:02}.{millis:03}"
 
-def avvia_pausa_cronometro():
-	global go, stop, start_time, pause_time, tpausa, crono, last_giro_time, TCRONOINIZIO, TEMPO_PAUSE
-	if not go:
-		go = True
-		stop = False
-		if TCRONOINIZIO is None:
-			TCRONOINIZIO = time.time()
-		if start_time is None:
-			start_time = time.time()
-		else:
-			TEMPO_PAUSE += time.time() - pause_time
-			start_time = time.time() - crono
-		last_giro_time = start_time  # Initialize last_giro_time when starting the cronometro
-		print("\nCronometro avviato!",end="",flush=True)
-	elif not stop:
-		stop = True
-		pause_time = time.time()
-		crono = pause_time - start_time
-		print("\nCronometro in pausa!",end="",flush=True)
-	else:
-		stop = False
-		TEMPO_PAUSE += time.time() - pause_time
-		start_time = time.time() - crono
-		print("\nCronometro ripreso!",end="",flush=True)
+class Stopwatch:
+    def __init__(self):
+        self.reset()
 
-def ferma_cronometro():
-	global go, stop, crono, pause_time
-	if not stop:
-		stop = True
-		pause_time = time.time()
-		crono = pause_time - start_time
-		print("\nCronometro fermato!",end="",flush=True)
-		go = False
+    def reset(self):
+        self._start_time = 0.0
+        self._pause_time = 0.0
+        self._total_pause_time = 0.0
+        self._running = False
+        self._laps = []
+        self._last_lap_time = 0.0
+        print("\nCronometro azzerato!", end="", flush=True)
 
-def azzera_cronometro():
-	global go, stop, crono, tpausa, giri, last_giro_time, TCRONOINIZIO, TEMPO_PAUSE
-	if stop:
-		go = False
-		stop = True
-		crono = 0.0
-		tpausa = 0.0
-		giri = []
-		last_giro_time = None
-		TCRONOINIZIO = None
-		TEMPO_PAUSE = 0.0
-		print("\nCronometro azzerato!",end="",flush=True)
-	else:
-		print("\nIl cronometro deve essere in pausa per azzerare.",end="",flush=True)
+    def start_pause(self):
+        if not self._running:
+            # Starting or resuming
+            self._running = True
+            if self._start_time == 0.0: # First start
+                self._start_time = time.time()
+                self._last_lap_time = self._start_time
+                print("\nCronometro avviato!", end="", flush=True)
+            else: # Resuming
+                pause_duration = time.time() - self._pause_time
+                self._total_pause_time += pause_duration
+                print("\nCronometro ripreso!", end="", flush=True)
+        else:
+            # Pausing
+            self._running = False
+            self._pause_time = time.time()
+            print("\nCronometro in pausa!", end="", flush=True)
 
-def registra_giro():
-	global crono, start_time, giri, tpausa, last_giro_time
-	if not stop:
-		now = time.time()
-		if last_giro_time is None:
-			last_giro_time = now
-		giro = now - last_giro_time
-		last_giro_time = now
-		giri.append(giro)
-		numero_giro = len(giri)
-		print(f"\nGiro {numero_giro} registrato: {stringa_tempo(giro)}",end=" ",flush=True)
-		if giro == min(giri):
-			print("max",end="",flush=True)
-		elif giro == max(giri):
-			print("min",end="",flush=True)
+    def stop(self):
+        if self._running:
+            self.start_pause() # Just pause it
+        print("\nCronometro fermato!", end="", flush=True)
+
+    def record_lap(self):
+        if not self._running:
+            return
+        now = time.time()
+        lap_time = now - self._last_lap_time
+        self._last_lap_time = now
+        self._laps.append(lap_time)
+        numero_giro = len(self._laps)
+        print(f"\nGiro {numero_giro} registrato: {stringa_tempo(lap_time)}", end=" ", flush=True)
+        if len(self._laps) > 1:
+            if lap_time == min(self._laps):
+                print("(giro più veloce)", end="", flush=True)
+            elif lap_time == max(self._laps):
+                print("(giro più lento)", end="", flush=True)
+
+    def get_elapsed_time(self):
+        if self._start_time == 0.0:
+            return 0.0
+        if not self._running:
+            return self._pause_time - self._start_time - self._total_pause_time
+        return time.time() - self._start_time - self._total_pause_time
+
+    @property
+    def laps(self):
+        return self._laps
+
+    @property
+    def is_running(self):
+        return self._running
 
 def mostra_data_attuale():
 	now = datetime.datetime.now()
@@ -122,87 +135,73 @@ def mostra_data_attuale():
 def mostra_ora_attuale():
 	print(f"\nOre: {datetime.datetime.now().strftime('%H:%M:%S')}",end="",flush=True)
 
-def tempo_trascorso_globale():
-	global TCRONOINIZIO, TEMPO_PAUSE, go, stop, pause_time
-	if TCRONOINIZIO is None:
-		tempo_trascorso = 0.0
-	elif go:
-		tempo_trascorso = time.time() - TCRONOINIZIO - TEMPO_PAUSE
-	else:
-		tempo_trascorso = pause_time - TCRONOINIZIO - TEMPO_PAUSE
-	print(f"\nTempo cronometro attivo): {stringa_tempo(tempo_trascorso)}",end="",flush=True)
-	return tempo_trascorso
-
-def tempo_cronometro_in_moto():
-	global crono, start_time, tpausa
-	if not stop:
-		tempo_in_moto = time.time() - start_time - tpausa
-	else:
-		tempo_in_moto = crono
-	print(f"\nTempo cronometro in moto: {stringa_tempo(tempo_in_moto)}",end="",flush=True)
-	return tempo_in_moto
-
 def tempo_complessivo_esecuzione():
-	global TINIZIO
-	tempo_complessivo = time.time() - TINIZIO
-	print(f"\nTempo applicazione: {stringa_tempo(tempo_complessivo)}",end="",flush=True)
-	return tempo_complessivo
+	return time.time() - TINIZIO
 
-def salva_report():
-	global giri, crono
-	tempo_in_moto = tempo_cronometro_in_moto()
-	tempo_globale = tempo_trascorso_globale()
+def salva_report(stopwatch):
+	giri = stopwatch.laps
+	tempo_trascorso = stopwatch.get_elapsed_time()
 	tempo_complessivo = tempo_complessivo_esecuzione()
 	filename = f"Meditimer-{datetime.datetime.now().strftime('%y%m%d-%H%M')}.txt"
 	with open(filename, 'w') as f:
 		f.write(f"Report Meditimer versione {VERSIONE}\n")
 		f.write(f"Creato il {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-		f.write("Giri registrati:\n")
-		for i, giro in enumerate(giri):
-			giro_str = stringa_tempo(giro)
-			if giro == min(giri):
-				giro_str += " Giro più veloce"
-			elif giro == max(giri):
-				giro_str += " Giro più lento"
-			f.write(f"Giro {i+1}: {giro_str}\n")
 		if giri:
+			f.write("\nGiri registrati:\n")
+			for i, giro in enumerate(giri):
+				giro_str = stringa_tempo(giro)
+				if giro == min(giri):
+					giro_str += " (Giro più veloce)"
+				elif giro == max(giri):
+					giro_str += " (Giro più lento)"
+				f.write(f"  Giro {i+1}: {giro_str}\n")
 			f.write(f"\nGiro più veloce: {stringa_tempo(min(giri))}")
-			f.write(f"Giro più lento: {stringa_tempo(max(giri))}\n")
+			f.write(f"\nGiro più lento: {stringa_tempo(max(giri))}\n")
 			f.write(f"Tempo medio: {stringa_tempo(sum(giri) / len(giri))}\n")
-		f.write(f"\nTempo totale: {stringa_tempo(sum(giri))}")
-		f.write(f"Tempo trascorso globalmente: {stringa_tempo(tempo_globale)}\n")
-		f.write(f"Tempo del cronometro in moto: {stringa_tempo(tempo_in_moto)}\n")
+			f.write(f"\nTempo totale dei giri: {stringa_tempo(sum(giri))}\n")
+		f.write(f"Tempo totale trascorso: {stringa_tempo(tempo_trascorso)}\n")
 		f.write(f"Tempo complessivo di esecuzione: {stringa_tempo(tempo_complessivo)}\n")
-	print(f"Report salvato in {filename}")
+	print(f"\nReport salvato in {filename}")
+
+def mostra_aiuto():
+    print("\nComandi disponibili:")
+    for key, desc in MNMENU.items():
+        print(f"\t'{key}': {desc}")
 
 def main():
 	print(f"Meditimer, versione {VERSIONE} by Gabriele Battaglia (IZ4APU).\n\tPremi '?' per aiuto.")
+	stopwatch = Stopwatch()
+	stopwatch.reset() # To print the initial message
+
 	while True:
-		if msvcrt.kbhit():
-			key = msvcrt.getch().decode('utf-8').lower()
+		if kbhit():
+			key = getch()
 			if key == 'a':
-				avvia_pausa_cronometro()
-			elif key == '?': menu(d=MNMENU,show_only=True)
+				stopwatch.start_pause()
+			elif key == '?':
+				mostra_aiuto()
 			elif key == 's':
-				ferma_cronometro()
+				stopwatch.stop()
 			elif key == 'z':
-				azzera_cronometro()
+				if not stopwatch.is_running:
+					stopwatch.reset()
+				else:
+					print("\nIl cronometro deve essere in pausa per azzerare.",end="",flush=True)
 			elif key == 'g':
-				registra_giro()
+				stopwatch.record_lap()
 			elif key == 'd':
 				mostra_data_attuale()
 			elif key == 'o':
 				mostra_ora_attuale()
 			elif key == 'c':
-				tempo_trascorso_globale()
-			elif key == 'x':
-				tempo_cronometro_in_moto()
+				print(f"\nTempo trascorso: {stringa_tempo(stopwatch.get_elapsed_time())}",end="",flush=True)
 			elif key == 'v':
-				tempo_complessivo_esecuzione()
+				print(f"\nTempo applicazione: {stringa_tempo(tempo_complessivo_esecuzione())}",end="",flush=True)
 			elif key == 'q':
-				salva_report()
-				print("Arrivederci!")
+				salva_report(stopwatch)
+				print("\nArrivederci!")
 				break
+		time.sleep(0.01) # To prevent high CPU usage
 
 if __name__ == "__main__":
 	main()
