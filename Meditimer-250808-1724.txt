@@ -1,4 +1,0 @@
-Report Meditimer versione 2.1.0 di luglio 2024
-Creato il 2025-08-08 17:24:53
-Tempo totale trascorso: 00:00:00.000
-Tempo complessivo di esecuzione: 00:02:04.411
