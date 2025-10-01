@@ -1,0 +1,23 @@
+{
+    "GabryBat": {
+        "nome_computer": "GabryBat",
+        "data_test": "2025-10-01T12:56:22.118808",
+        "info_python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+        "num_core": 32,
+        "test": {
+            "int": {
+                "nome_test": "Calcoli su Interi",
+                "performance_totale": 392280556.6328037
+            },
+            "float": {
+                "nome_test": "Calcoli su Float",
+                "performance_totale": 579822643.8850585
+            },
+            "math": {
+                "nome_test": "Funzioni Matematiche",
+                "performance_totale": 225417067.81109983
+            }
+        },
+        "nota_utente": "GiantPC"
+    }
+}

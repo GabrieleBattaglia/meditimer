@@ -1,2 +1,3 @@
-# Byte-compiled / optimized / DLL files
+dist/
+built/
 __pycache__/
