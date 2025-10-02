@@ -1,0 +1,60 @@
+--- Report Test di Velocità Multi-Core (3 Fasi) ---
+Nome Computer: PC-Battaglia
+Data e Ora: 2025-10-02 14:27:42
+Versione Python: 3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]
+----------------------------------------
+RISULTATI FASE: Calcoli su Interi
+Durata effettiva: 10.5150 secondi
+  Performance Totale: 53.4 Mop/s (53,399,024 op/s)
+  Performance per Core:
+    Core 1 : 4.72 Mop/s (4,724,487 op/s)
+    Core 2 : 4.16 Mop/s (4,163,954 op/s)
+    Core 3 : 4.43 Mop/s (4,427,863 op/s)
+    Core 4 : 4.42 Mop/s (4,421,301 op/s)
+    Core 5 : 4.67 Mop/s (4,673,607 op/s)
+    Core 6 : 4.4 Mop/s (4,398,001 op/s)
+    Core 7 : 4.47 Mop/s (4,466,569 op/s)
+    Core 8 : 4.54 Mop/s (4,535,709 op/s)
+    Core 9 : 4.69 Mop/s (4,690,630 op/s)
+    Core 10: 4.1 Mop/s (4,102,233 op/s)
+    Core 11: 4.57 Mop/s (4,572,608 op/s)
+    Core 12: 4.22 Mop/s (4,222,062 op/s)
+----------------------------------------
+RISULTATI FASE: Calcoli su Float
+Durata effettiva: 10.0105 secondi
+  Performance Totale: 82.6 Mop/s (82,646,755 op/s)
+  Performance per Core:
+    Core 1 : 7.18 Mop/s (7,182,153 op/s)
+    Core 2 : 7.07 Mop/s (7,072,768 op/s)
+    Core 3 : 7.05 Mop/s (7,054,088 op/s)
+    Core 4 : 6.63 Mop/s (6,630,233 op/s)
+    Core 5 : 7.02 Mop/s (7,022,920 op/s)
+    Core 6 : 6.43 Mop/s (6,433,240 op/s)
+    Core 7 : 7.05 Mop/s (7,045,796 op/s)
+    Core 8 : 7.01 Mop/s (7,013,930 op/s)
+    Core 9 : 7.18 Mop/s (7,183,951 op/s)
+    Core 10: 6.82 Mop/s (6,824,429 op/s)
+    Core 11: 6.58 Mop/s (6,580,485 op/s)
+    Core 12: 6.6 Mop/s (6,602,762 op/s)
+----------------------------------------
+RISULTATI FASE: Funzioni Matematiche
+Durata effettiva: 10.0044 secondi
+  Performance Totale: 35.1 Mop/s (35,145,071 op/s)
+  Performance per Core:
+    Core 1 : 2.99 Mop/s (2,991,470 op/s)
+    Core 2 : 2.92 Mop/s (2,916,003 op/s)
+    Core 3 : 2.84 Mop/s (2,838,738 op/s)
+    Core 4 : 2.88 Mop/s (2,880,419 op/s)
+    Core 5 : 2.98 Mop/s (2,978,975 op/s)
+    Core 6 : 2.96 Mop/s (2,956,485 op/s)
+    Core 7 : 2.98 Mop/s (2,983,973 op/s)
+    Core 8 : 2.86 Mop/s (2,862,427 op/s)
+    Core 9 : 3.02 Mop/s (3,018,358 op/s)
+    Core 10: 2.95 Mop/s (2,945,290 op/s)
+    Core 11: 2.99 Mop/s (2,985,672 op/s)
+    Core 12: 2.79 Mop/s (2,787,260 op/s)
+----------------------------------------
+Nota: RAM e GPU non possono essere misurate con precisione usando solo librerie standard di Python.
+
+--- Nota dell'Utente ---
+PCUfficio
