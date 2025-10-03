@@ -1,3 +1,4 @@
 dist/
 built/
 __pycache__/
+*.txt

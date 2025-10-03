@@ -42,12 +42,12 @@ except ImportError:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch.lower()
-VERSIONE = "2.8.0 di ottobre 2025"
+VERSIONE = "2.8.5 del 3 ottobre 2025"
 MNMENU={'a':'per avviare/pausa',
-  's':'Per fermare',
+  's':"Per registrare l'ultimo giro e fermare",
   'z':'Per azzerare',
   'f':'Per statistiche sui giri',
-  'g':'Per registrare un giro',
+  ' ':'Per registrare un giro (barra spazio)',
   'd':'Per mostrare la data',
   'o':"Per mostrare l'ora",
   'x':'Per impostare un timer',
@@ -102,17 +102,24 @@ class Stopwatch:
         self._total_pause_time = 0.0
         self._running = False
         self._laps = []
-        self._last_lap_time = 0.0
+        self._lap_strings = []
         print("\nCronometro azzerato!", end="", flush=True)
 
-    def reset(self):
-        self._start_time = 0.0
-        self._pause_time = 0.0
-        self._total_pause_time = 0.0
-        self._running = False
-        self._laps = []
-        self._lap_strings = [] # <-- NUOVA LISTA PER LE STRINGHE
-        print("\nCronometro azzerato!", end="", flush=True)
+    def start_pause(self):
+        if not self._running:
+            self._running = True
+            if self._start_time == 0.0:
+                self._start_time = time.time()
+                self._last_lap_time = self._start_time
+                print("\nCronometro avviato!", end="", flush=True)
+            else:
+                pause_duration = time.time() - self._pause_time
+                self._total_pause_time += pause_duration
+                print("\nCronometro ripreso!", end="", flush=True)
+        else:
+            self._running = False
+            self._pause_time = time.time()
+            print("\nCronometro in pausa!", end="", flush=True)
 
     def stop(self):
         if self._running:
@@ -144,7 +151,7 @@ class Stopwatch:
         
         numero_giro = len(self._laps)
         
-        output_str = f"Giro {numero_giro} registrato: {stringa_tempo_descrittiva(lap_time)}" # Rimosso \n iniziale
+        output_str = f"Giro {numero_giro} registrato: {stringa_tempo_descrittiva(lap_time)}"
         output_str += percentuale_str
 
         if len(self._laps) > 1:
@@ -153,9 +160,10 @@ class Stopwatch:
             elif lap_time == max(self._laps):
                 output_str += " (nuovo giro più lento)"
         
-        print("\n" + output_str, end="", flush=True) # Aggiunto \n qui
+        print("\n" + output_str, end="", flush=True)
         
         self._lap_strings.append(output_str)
+
     def get_elapsed_time(self):
         if self._start_time == 0.0:
             return 0.0
@@ -166,13 +174,14 @@ class Stopwatch:
     @property
     def laps(self):
         return self._laps
+
     @property
     def lap_strings(self):
         return self._lap_strings
+
     @property
     def is_running(self):
         return self._running
-
 def mostra_data_attuale():
     now = datetime.datetime.now()
     giorno_settimana = GIORNISETTIMANA[now.weekday()]
@@ -621,12 +630,13 @@ def mostra_statistiche_giri(stopwatch):
     giro_lento = max(giri)
     # Troviamo l'indice del primo giro più veloce (+1 perché gli indici partono da 0)
     numero_giro_veloce = giri.index(giro_veloce) + 1
+    numero_giro_lento = giri.index(giro_lento) + 1
     media_giri = sum(giri) / len(giri)
     differenza = giro_lento - giro_veloce
 
     print("\n\n--- Statistiche Giri ---")
     print(f"  Giro più veloce:  (Giro n.{numero_giro_veloce}) {stringa_tempo_descrittiva(giro_veloce)}")
-    print(f"  Giro più lento:   {stringa_tempo_descrittiva(giro_lento)}")
+    print(f"  Giro più lento:   (Giro n.{numero_giro_lento}) {stringa_tempo_descrittiva(giro_lento)}")
     print(f"  Media giri:       {stringa_tempo_descrittiva(media_giri)}")
     print(f"  Differenza:       {stringa_tempo_descrittiva(differenza)}")
     print("------------------------")
@@ -674,14 +684,17 @@ def main():
                 imposta_timer()
                 prompt_needed = True
             elif key == 's':
+                stopwatch.record_lap()
                 stopwatch.stop()
             elif key == 'z':
                 if not stopwatch.is_running:
                     stopwatch.reset()
                 else:
                     print("\nIl cronometro deve essere in pausa per azzerare.",end="",flush=True)
-            elif key == 'g':
+            elif key == ' ':
                 stopwatch.record_lap()
+            elif key == 'f':
+                mostra_statistiche_giri(stopwatch)
             elif key == 'd':
                 mostra_data_attuale()
             elif key == 'o':
