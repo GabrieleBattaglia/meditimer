@@ -42,10 +42,11 @@ except ImportError:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch.lower()
-VERSIONE = "2.5.2 di ottobre 2025"
+VERSIONE = "2.8.0 di ottobre 2025"
 MNMENU={'a':'per avviare/pausa',
   's':'Per fermare',
   'z':'Per azzerare',
+  'f':'Per statistiche sui giri',
   'g':'Per registrare un giro',
   'd':'Per mostrare la data',
   'o':"Per mostrare l'ora",
@@ -57,6 +58,7 @@ MNMENU={'a':'per avviare/pausa',
   'n':'Per mostrare le classifiche dei benchmark',
   'q':'Per uscire e salvare il report',
   '?':'Per mostrare questo aiuto'}
+
 GIORNISETTIMANA = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
 MESIANNO = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
 TINIZIO = time.time()
@@ -103,21 +105,14 @@ class Stopwatch:
         self._last_lap_time = 0.0
         print("\nCronometro azzerato!", end="", flush=True)
 
-    def start_pause(self):
-        if not self._running:
-            self._running = True
-            if self._start_time == 0.0:
-                self._start_time = time.time()
-                self._last_lap_time = self._start_time
-                print("\nCronometro avviato!", end="", flush=True)
-            else:
-                pause_duration = time.time() - self._pause_time
-                self._total_pause_time += pause_duration
-                print("\nCronometro ripreso!", end="", flush=True)
-        else:
-            self._running = False
-            self._pause_time = time.time()
-            print("\nCronometro in pausa!", end="", flush=True)
+    def reset(self):
+        self._start_time = 0.0
+        self._pause_time = 0.0
+        self._total_pause_time = 0.0
+        self._running = False
+        self._laps = []
+        self._lap_strings = [] # <-- NUOVA LISTA PER LE STRINGHE
+        print("\nCronometro azzerato!", end="", flush=True)
 
     def stop(self):
         if self._running:
@@ -130,15 +125,37 @@ class Stopwatch:
         now = time.time()
         lap_time = now - self._last_lap_time
         self._last_lap_time = now
+        
+        percentuale_str = ""
+        
+        if len(self._laps) >= 2:
+            min_lap_prev = min(self._laps)
+            max_lap_prev = max(self._laps)
+            lap_range_prev = max_lap_prev - min_lap_prev
+
+            if lap_range_prev == 0:
+                percentuale = ((min_lap_prev - lap_time) / min_lap_prev) * 100 if min_lap_prev > 0 else 0
+            else:
+                percentuale = (1 - ((lap_time - min_lap_prev) / lap_range_prev)) * 100
+            
+            percentuale_str = f" ({percentuale:+.2f}%)"
+
         self._laps.append(lap_time)
+        
         numero_giro = len(self._laps)
-        print(f"\nGiro {numero_giro} registrato: {stringa_tempo_descrittiva(lap_time)}", end=" ", flush=True)
+        
+        output_str = f"Giro {numero_giro} registrato: {stringa_tempo_descrittiva(lap_time)}" # Rimosso \n iniziale
+        output_str += percentuale_str
+
         if len(self._laps) > 1:
             if lap_time == min(self._laps):
-                print("(giro più veloce)", end="", flush=True)
+                output_str += " (nuovo giro più veloce!)"
             elif lap_time == max(self._laps):
-                print("(giro più lento)", end="", flush=True)
-
+                output_str += " (nuovo giro più lento)"
+        
+        print("\n" + output_str, end="", flush=True) # Aggiunto \n qui
+        
+        self._lap_strings.append(output_str)
     def get_elapsed_time(self):
         if self._start_time == 0.0:
             return 0.0
@@ -149,7 +166,9 @@ class Stopwatch:
     @property
     def laps(self):
         return self._laps
-
+    @property
+    def lap_strings(self):
+        return self._lap_strings
     @property
     def is_running(self):
         return self._running
@@ -172,34 +191,40 @@ def tempo_complessivo_esecuzione():
 def salva_report(stopwatch):
     giri = stopwatch.laps
     tempo_trascorso = stopwatch.get_elapsed_time()
+
     if not giri and tempo_trascorso == 0:
         print("\nNessun dato del cronometro da salvare. Uscita senza report.")
-        return  # Esce immediatamente dalla funzione
+        return
+
     tempo_complessivo = tempo_complessivo_esecuzione()
     filename = f"Meditimer-{datetime.datetime.now().strftime('%y%m%d-%H%M')}.txt"
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(f"Report Meditimer versione {VERSIONE}\n")
         f.write(f"Creato il {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        if giri:
+        
+        # --- BLOCCO MODIFICATO ---
+        # Ora usiamo la lista di stringhe pre-formattate
+        giri_dettagliati = stopwatch.lap_strings
+        if giri_dettagliati:
             f.write("\nGiri registrati:\n")
-            for i, giro in enumerate(giri):
-                giro_str = stringa_tempo_descrittiva(giro)
-                if giro == min(giri):
-                    giro_str += " (Giro più veloce)"
-                elif giro == max(giri):
-                    giro_str += " (Giro più lento)"
-                f.write(f"  Giro {i+1}: {giro_str}\n")
+            for riga_giro in giri_dettagliati:
+                f.write(f"  {riga_giro}\n")
+        # --- FINE BLOCCO MODIFICATO ---
+
+        # Il resto della funzione (statistiche aggregate) non cambia
+        if giri:
             f.write(f"\nGiro più veloce: {stringa_tempo_descrittiva(min(giri))}\n")
             f.write(f"Giro più lento: {stringa_tempo_descrittiva(max(giri))}\n")
             f.write(f"Tempo medio: {stringa_tempo_descrittiva(sum(giri) / len(giri))}\n")
             if sum(giri) > 0:
                 f.write(f"\nTempo totale dei giri: {stringa_tempo_descrittiva(sum(giri))}\n")
+        
         if tempo_trascorso > 0:
             f.write(f"Tempo totale trascorso: {stringa_tempo_descrittiva(tempo_trascorso)}\n")
         if tempo_complessivo > 0:
             f.write(f"Tempo complessivo di esecuzione: {stringa_tempo_descrittiva(tempo_complessivo)}\n")
+    
     print(f"\nReport salvato in {filename}")
-
 def mostra_aiuto():
     print("\nComandi disponibili:")
     for key, desc in MNMENU.items():
@@ -257,6 +282,85 @@ def salva_risultati_benchmark(risultati):
     except IOError as e:
         print(f"\nErrore durante il salvataggio del file JSON: {e}")
 
+def _chiedi_nota_e_salva_tutto(risultati_json, report_testo):
+    """
+    Funzione helper che chiede la nota utente, aggiorna i dati e salva
+    sia il report .txt che il file .json.
+    """
+    # 1. Chiede la nota e aggiorna entrambi i set di dati
+    print("\nPuoi aggiungere una nota personale al report.")
+    nota_utente = input("Inserisci la nota e premi Invio (lascia vuoto per nessuna nota): ")
+    if nota_utente:
+        risultati_json["nota_utente"] = nota_utente
+        report_testo.append("\n--- Nota dell'Utente ---")
+        report_testo.append(nota_utente)
+    else:
+        risultati_json["nota_utente"] = ""
+
+    # 2. Salva il report di testo (.txt)
+    try:
+        nome_computer = risultati_json['nome_computer']
+        data_e_ora = datetime.datetime.fromisoformat(risultati_json['data_test'])
+        filename = f"benchmark-multicore-{nome_computer}-{data_e_ora.strftime('%Y%m%d-%H%M%S')}.txt"
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write("\n".join(report_testo))
+        print(f"\nReport di benchmark salvato con successo nel file: {filename}")
+    except IOError as e:
+        print(f"\nErrore: Impossibile salvare il file di report. Dettagli: {e}")
+
+    # 3. Salva i dati nella classifica (.json)
+    salva_risultati_benchmark(risultati_json)
+def confronta_e_salva_benchmark(nuovi_risultati, report_testo):
+    """
+    Controlla i risultati precedenti. Se esistono, chiede conferma prima di
+    chiamare la funzione helper per chiedere la nota e salvare tutto.
+    """
+    try:
+        with open(NOME_FILE_JSON, 'r', encoding='utf-8') as f:
+            dati_esistenti = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        dati_esistenti = {}
+
+    nome_computer = nuovi_risultati['nome_computer']
+
+    if nome_computer not in dati_esistenti:
+        print("\nNessun risultato precedente trovato per questa macchina.")
+        _chiedi_nota_e_salva_tutto(nuovi_risultati, report_testo)
+        return
+
+    vecchi_risultati = dati_esistenti[nome_computer]
+    print("\n--- Confronto con i Risultati Esistenti ---")
+    print(f"{'Tipo Test':<22} {'Valore Precedente':<18} {'Differenza (op/s)':<22} {'Variazione (%)'}")
+    print("-" * 85)
+
+    nomi_test = {
+        'int': 'Calcoli su Interi',
+        'float': 'Calcoli su Float',
+        'math': 'Funzioni Matematiche'
+    }
+
+    for tipo, nome_test in nomi_test.items():
+        vecchio_valore = vecchi_risultati.get('test', {}).get(tipo, {}).get('performance_totale', 0)
+        nuovo_valore = nuovi_risultati.get('test', {}).get(tipo, {}).get('performance_totale', 0)
+        if vecchio_valore == 0:
+            print(f"{nome_test:<22} {'N/D (vecchio valore nullo)':<18}")
+            continue
+        differenza = nuovo_valore - vecchio_valore
+        percentuale = (differenza / vecchio_valore) * 100 if vecchio_valore else 0
+        vecchio_formattato = formatta_numero_grande(vecchio_valore, 'op/s')
+        print(f"{nome_test:<22} {vecchio_formattato:<18} {differenza:+.2f} {percentuale:+.4f}%")
+
+    while True:
+        scelta = input("\nVuoi sovrascrivere i risultati esistenti con quelli nuovi? (s/n): ").lower()
+        if scelta == 's':
+            _chiedi_nota_e_salva_tutto(nuovi_risultati, report_testo)
+            break
+        elif scelta == 'n':
+            print("\nOperazione annullata. I risultati precedenti sono stati mantenuti.")
+            break
+        else:
+            print("Input non valido. Per favore, inserisci 's' o 'n'.")
+
 def esegui_benchmark_multicore():
     print("\n\n-- Inizio Test di Velocità Multi-Core (3 Fasi) --")
     
@@ -275,7 +379,6 @@ def esegui_benchmark_multicore():
     report_testo.append(f"Data e Ora: {data_e_ora.strftime('%Y-%m-%d %H:%M:%S')}")
     report_testo.append(f"Versione Python: {info_python.splitlines()[0]}")
 
-    # Dizionario per salvare i dati strutturati per il JSON
     risultati_json = {
         "nome_computer": nome_computer,
         "data_test": data_e_ora.isoformat(),
@@ -293,34 +396,22 @@ def esegui_benchmark_multicore():
     with multiprocessing.Pool(processes=num_core) as pool:
         for i, (nome_test, tipo) in enumerate(tipi_di_test):
             print(f"\n-- Fase {i+1}/3: {nome_test}... --")
-            
             start_time = time.perf_counter()
             args = [(DURATA_PER_TEST, tipo)] * num_core
             risultati_per_core = pool.starmap(benchmark_worker, args)
             end_time = time.perf_counter()
-            
             tempo_effettivo = end_time - start_time
-            
             report_testo.append("-" * 40)
             report_testo.append(f"RISULTATI FASE: {nome_test}")
             report_testo.append(f"Durata effettiva: {tempo_effettivo:.4f} secondi")
-
             totale_operazioni = sum(risultati_per_core)
             performance_totale = totale_operazioni / tempo_effettivo
-            
-            # Aggiungi i risultati al report di testo
             report_testo.append(f"  Performance Totale: {formatta_numero_grande(performance_totale, 'op/s')} ({performance_totale:,.0f} op/s)")
             report_testo.append("  Performance per Core:")
-            
             for core_idx, res_core in enumerate(risultati_per_core):
                 perf_core = res_core / tempo_effettivo
                 report_testo.append(f"    Core {core_idx+1:<2}: {formatta_numero_grande(perf_core, 'op/s')} ({perf_core:,.0f} op/s)")
-
-            # Aggiungi i risultati al dizionario per il JSON
-            risultati_json["test"][tipo] = {
-                "nome_test": nome_test,
-                "performance_totale": performance_totale
-            }
+            risultati_json["test"][tipo] = { "nome_test": nome_test, "performance_totale": performance_totale }
 
     report_testo.append("-" * 40)
     report_testo.append("Nota: RAM e GPU non possono essere misurate con precisione usando solo librerie standard di Python.")
@@ -328,28 +419,9 @@ def esegui_benchmark_multicore():
     report_completo = "\n".join(report_testo)
     print("\n" + report_completo)
 
-    print("\nPuoi aggiungere una nota personale al report.")
-    nota_utente = input("Inserisci la nota e premi Invio (lascia vuoto per nessuna nota): ")
-    if nota_utente:
-        report_testo.append("\n--- Nota dell'Utente ---")
-        report_testo.append(nota_utente)
-        risultati_json["nota_utente"] = nota_utente # Aggiungi la nota al JSON
-    else:
-        risultati_json["nota_utente"] = ""
-
-    # Salva il report di testo
-    try:
-        filename = f"benchmark-multicore-{nome_computer}-{data_e_ora.strftime('%Y%m%d-%H%M%S')}.txt"
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write("\n".join(report_testo))
-        print(f"\nReport di benchmark salvato con successo nel file: {filename}")
-    except IOError as e:
-        print(f"\nErrore: Impossibile salvare il file di report. Dettagli: {e}")
-
-    # Salva i risultati nel file JSON
-    salva_risultati_benchmark(risultati_json)
-
-    print("\nPremi un tasto per tornare al menu principale.")
+    # La richiesta della nota e il salvataggio dei file sono stati spostati.
+    # Ora passiamo entrambi i set di dati alla funzione di confronto.
+    confronta_e_salva_benchmark(risultati_json, report_testo)
 
 def mostra_classifiche():
     """
@@ -404,8 +476,6 @@ def mostra_classifiche():
             nota_str = entry['nota'][:28]
             
             print(f"{pos:<5} {nome:<25} {velocita_str:<20} {data_str:<20} {nota_str:<30}")
-
-    print("\nPremi un tasto per tornare al menu principale.")
 
 def parse_time_input(input_str):
     """
@@ -536,6 +606,31 @@ def alarm_worker(durata_secondi):
     time.sleep(durata_secondi)
     suona_allarme()
 
+def mostra_statistiche_giri(stopwatch):
+    """
+    Mostra una schermata di riepilogo con le statistiche principali dei giri registrati.
+    """
+    giri = stopwatch.laps
+    
+    # Controlla se ci sono abbastanza dati per le statistiche
+    if len(giri) < 2:
+        print("\nServono almeno 2 giri registrati per visualizzare le statistiche.", end="", flush=True)
+        return
+
+    giro_veloce = min(giri)
+    giro_lento = max(giri)
+    # Troviamo l'indice del primo giro più veloce (+1 perché gli indici partono da 0)
+    numero_giro_veloce = giri.index(giro_veloce) + 1
+    media_giri = sum(giri) / len(giri)
+    differenza = giro_lento - giro_veloce
+
+    print("\n\n--- Statistiche Giri ---")
+    print(f"  Giro più veloce:  (Giro n.{numero_giro_veloce}) {stringa_tempo_descrittiva(giro_veloce)}")
+    print(f"  Giro più lento:   {stringa_tempo_descrittiva(giro_lento)}")
+    print(f"  Media giri:       {stringa_tempo_descrittiva(media_giri)}")
+    print(f"  Differenza:       {stringa_tempo_descrittiva(differenza)}")
+    print("------------------------")
+
 def imposta_sveglia():
     """
     Chiede all'utente l'orario della sveglia e avvia il thread.
@@ -558,9 +653,13 @@ def imposta_sveglia():
     alarm_thread.start()
 
 def main():
-    print(f"Meditimer - (L'AFFETTA TEMPO), versione {VERSIONE} by Gabriele Battaglia (IZ4APU).\n\tPremi '?' per aiuto.")
+    print(f"Meditimer - (L'AFFETTA TEMPO), versione {VERSIONE} by Gabriele Battaglia (IZ4APU).")
     stopwatch = Stopwatch()
+    prompt_needed = True
     while True:
+        if prompt_needed:
+            print(f"\n\nMenu principale ('?' per aiuto) > ", end="", flush=True)
+            prompt_needed = False
         if kbhit():
             key = getch()
             if key == 'a':
@@ -570,8 +669,10 @@ def main():
             
             elif key == 'w':
                 imposta_sveglia()
+                prompt_needed = True
             elif key == 'x':
                 imposta_timer()
+                prompt_needed = True
             elif key == 's':
                 stopwatch.stop()
             elif key == 'z':
@@ -591,8 +692,10 @@ def main():
                     print(f"\nTempo trascorso: {stringa_tempo_descrittiva(tempo_trascorso)}", end="", flush=True)
             elif key == 'b':
                 esegui_benchmark_multicore()
+                prompt_needed = True
             elif key == 'n': # Nuovo comando per le classifiche
                 mostra_classifiche()
+                prompt_needed = True
             elif key == 'v':
                 tempo_esec = tempo_complessivo_esecuzione()
                 if tempo_esec > 0:

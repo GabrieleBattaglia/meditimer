@@ -1,0 +1,35 @@
+Report Meditimer versione 2.7.0 di ottobre 2025
+Creato il 2025-10-03 07:40:44
+
+Giri registrati:
+  Giro 1: 4 secondi e 322 millisecondi
+  Giro 2: 8 secondi e 318 millisecondi
+  Giro 3: 9 secondi e 200 millisecondi
+  Giro 4: 13 secondi e 417 millisecondi
+  Giro 5: 12 secondi e 533 millisecondi
+  Giro 6: 12 secondi e 641 millisecondi
+  Giro 7: 9 secondi e 92 millisecondi
+  Giro 8: 5 secondi e 177 millisecondi
+  Giro 9: 7 secondi e 755 millisecondi
+  Giro 10: 3 secondi e 515 millisecondi
+  Giro 11: 6 secondi e 182 millisecondi
+  Giro 12: 3 secondi e 399 millisecondi
+  Giro 13: 3 secondi e 782 millisecondi
+  Giro 14: 6 secondi e 818 millisecondi
+  Giro 15: 9 secondi e 516 millisecondi
+  Giro 16: 3 secondi e 869 millisecondi
+  Giro 17: 2 secondi e 764 millisecondi
+  Giro 18: 4 secondi e 613 millisecondi
+  Giro 19: 3 secondi e 725 millisecondi
+  Giro 20: 1 secondo e 995 millisecondi (Giro più veloce)
+  Giro 21: 4 secondi e 562 millisecondi
+  Giro 22: 17 secondi e 887 millisecondi (Giro più lento)
+  Giro 23: 5 secondi e 225 millisecondi
+
+Giro più veloce: 1 secondo e 995 millisecondi
+Giro più lento: 17 secondi e 887 millisecondi
+Tempo medio: 6 secondi e 970 millisecondi
+
+Tempo totale dei giri: 2 minuti, 40 secondi e 319 millisecondi
+Tempo totale trascorso: 2 minuti, 48 secondi e 217 millisecondi
+Tempo complessivo di esecuzione: 2 minuti, 58 secondi e 516 millisecondi

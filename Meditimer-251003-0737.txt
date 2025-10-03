@@ -1,0 +1,23 @@
+Report Meditimer versione 2.6.0 di ottobre 2025
+Creato il 2025-10-03 07:37:35
+
+Giri registrati:
+  Giro 1: 1 minuto, 15 secondi e 585 millisecondi (Giro più lento)
+  Giro 2: 10 secondi e 435 millisecondi
+  Giro 3: 4 secondi e 73 millisecondi
+  Giro 4: 5 secondi e 62 millisecondi
+  Giro 5: 3 secondi e 958 millisecondi
+  Giro 6: 7 secondi e 853 millisecondi
+  Giro 7: 4 secondi e 73 millisecondi
+  Giro 8: 2 secondi e 392 millisecondi
+  Giro 9: 2 secondi e 918 millisecondi
+  Giro 10: 1 secondo e 294 millisecondi (Giro più veloce)
+  Giro 11: 43 secondi e 705 millisecondi
+
+Giro più veloce: 1 secondo e 294 millisecondi
+Giro più lento: 1 minuto, 15 secondi e 585 millisecondi
+Tempo medio: 14 secondi e 668 millisecondi
+
+Tempo totale dei giri: 2 minuti, 41 secondi e 352 millisecondi
+Tempo totale trascorso: 21 minuti, 35 secondi e 930 millisecondi
+Tempo complessivo di esecuzione: 25 minuti, 1 secondo e 594 millisecondi
