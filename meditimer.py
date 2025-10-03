@@ -42,7 +42,7 @@ except ImportError:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch.lower()
-VERSIONE = "2.8.5 del 3 ottobre 2025"
+VERSIONE = "2.9.0 del 3 ottobre 2025"
 MNMENU={'a':'per avviare/pausa',
   's':"Per registrare l'ultimo giro e fermare",
   'z':'Per azzerare',
@@ -201,9 +201,16 @@ def salva_report(stopwatch):
     giri = stopwatch.laps
     tempo_trascorso = stopwatch.get_elapsed_time()
 
+    # Se non ci sono dati da salvare, la funzione termina subito come prima.
     if not giri and tempo_trascorso == 0:
-        print("\nNessun dato del cronometro da salvare. Uscita senza report.")
+        print("\nNessun dato del cronometro da salvare.")
         return
+
+    # --- NUOVA LOGICA: Chiede la nota all'utente ---
+    print("\nCosa hai cronometrato? Aggiungi una nota per il report.")
+    nota_utente = input("Inserisci la nota e premi Invio (lascia vuoto per 'Nessuna nota'): ")
+    if not nota_utente:
+        nota_utente = "Nessuna nota"
 
     tempo_complessivo = tempo_complessivo_esecuzione()
     filename = f"Meditimer-{datetime.datetime.now().strftime('%y%m%d-%H%M')}.txt"
@@ -211,16 +218,12 @@ def salva_report(stopwatch):
         f.write(f"Report Meditimer versione {VERSIONE}\n")
         f.write(f"Creato il {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         
-        # --- BLOCCO MODIFICATO ---
-        # Ora usiamo la lista di stringhe pre-formattate
         giri_dettagliati = stopwatch.lap_strings
         if giri_dettagliati:
             f.write("\nGiri registrati:\n")
             for riga_giro in giri_dettagliati:
                 f.write(f"  {riga_giro}\n")
-        # --- FINE BLOCCO MODIFICATO ---
-
-        # Il resto della funzione (statistiche aggregate) non cambia
+        
         if giri:
             f.write(f"\nGiro più veloce: {stringa_tempo_descrittiva(min(giri))}\n")
             f.write(f"Giro più lento: {stringa_tempo_descrittiva(max(giri))}\n")
@@ -232,8 +235,12 @@ def salva_report(stopwatch):
             f.write(f"Tempo totale trascorso: {stringa_tempo_descrittiva(tempo_trascorso)}\n")
         if tempo_complessivo > 0:
             f.write(f"Tempo complessivo di esecuzione: {stringa_tempo_descrittiva(tempo_complessivo)}\n")
+
+        # --- NUOVA LOGICA: Aggiunge la nota al file ---
+        f.write("\n--- Nota dell'Utente ---\n")
+        f.write(f"{nota_utente}\n")
     
-    print(f"\nReport salvato in {filename}")
+    print(f"\nReport salvato con successo nel file: {filename}")
 def mostra_aiuto():
     print("\nComandi disponibili:")
     for key, desc in MNMENU.items():
@@ -688,6 +695,9 @@ def main():
                 stopwatch.stop()
             elif key == 'z':
                 if not stopwatch.is_running:
+                    # Prima salva il report della sessione corrente (chiederà la nota)
+                    salva_report(stopwatch)
+                    # Poi azzera per la sessione successiva
                     stopwatch.reset()
                 else:
                     print("\nIl cronometro deve essere in pausa per azzerare.",end="",flush=True)
