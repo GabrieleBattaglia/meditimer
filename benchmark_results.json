@@ -40,5 +40,26 @@
             }
         },
         "nota_utente": "PC-Ufficio-Test2"
+    },
+    "GabryMiniPC-GPD": {
+        "nome_computer": "GabryMiniPC-GPD",
+        "data_test": "2025-10-06T05:39:32.111677",
+        "info_python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+        "num_core": 8,
+        "test": {
+            "int": {
+                "nome_test": "Calcoli su Interi",
+                "performance_totale": 39197564.8028525
+            },
+            "float": {
+                "nome_test": "Calcoli su Float",
+                "performance_totale": 52030525.24095598
+            },
+            "math": {
+                "nome_test": "Funzioni Matematiche",
+                "performance_totale": 20080678.488009594
+            }
+        },
+        "nota_utente": "Mini a batteria"
     }
 }
