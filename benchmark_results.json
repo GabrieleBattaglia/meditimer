@@ -22,24 +22,24 @@
     },
     "PC-Battaglia": {
         "nome_computer": "PC-Battaglia",
-        "data_test": "2025-10-02T15:07:51.528359",
+        "data_test": "2025-11-05T10:02:43.587684",
         "info_python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
         "num_core": 12,
         "test": {
             "int": {
                 "nome_test": "Calcoli su Interi",
-                "performance_totale": 54290643.06604945
+                "performance_totale": 56385611.00637879
             },
             "float": {
                 "nome_test": "Calcoli su Float",
-                "performance_totale": 82755246.32571687
+                "performance_totale": 82168775.98485285
             },
             "math": {
                 "nome_test": "Funzioni Matematiche",
-                "performance_totale": 35826838.8636484
+                "performance_totale": 36608394.78644587
             }
         },
-        "nota_utente": "PC-Ufficio-Test2"
+        "nota_utente": ""
     },
     "GabryMiniPC-GPD": {
         "nome_computer": "GabryMiniPC-GPD",
