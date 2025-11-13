@@ -1,24 +1,24 @@
 {
     "GabryBat": {
         "nome_computer": "GabryBat",
-        "data_test": "2025-10-03T17:43:52.688978",
+        "data_test": "2025-11-13T08:22:43.291486",
         "info_python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
         "num_core": 32,
         "test": {
             "int": {
                 "nome_test": "Calcoli su Interi",
-                "performance_totale": 397288192.7889887
+                "performance_totale": 398301359.9824589
             },
             "float": {
                 "nome_test": "Calcoli su Float",
-                "performance_totale": 608989720.321265
+                "performance_totale": 608084354.8706017
             },
             "math": {
                 "nome_test": "Funzioni Matematiche",
-                "performance_totale": 234488272.53321177
+                "performance_totale": 237647876.63555408
             }
         },
-        "nota_utente": "PC Gigante"
+        "nota_utente": ""
     },
     "PC-Battaglia": {
         "nome_computer": "PC-Battaglia",
