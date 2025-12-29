@@ -1,21 +1,21 @@
 {
     "GabryBat": {
         "nome_computer": "GabryBat",
-        "data_test": "2025-11-13T08:22:43.291486",
+        "data_test": "2025-12-28T11:39:57.758852",
         "info_python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
         "num_core": 32,
         "test": {
             "int": {
                 "nome_test": "Calcoli su Interi",
-                "performance_totale": 398301359.9824589
+                "performance_totale": 402691428.80153507
             },
             "float": {
                 "nome_test": "Calcoli su Float",
-                "performance_totale": 608084354.8706017
+                "performance_totale": 618925929.4573708
             },
             "math": {
                 "nome_test": "Funzioni Matematiche",
-                "performance_totale": 237647876.63555408
+                "performance_totale": 236513936.3458177
             }
         },
         "nota_utente": ""
