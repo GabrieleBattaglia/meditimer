@@ -5,7 +5,15 @@
 # Restyling con ChatGPT4o il 16 luglio 2024
 # Aggiunta Classifiche Benchmark by Partner di Programmazione il 01/10/2025
 
-import time, datetime, sys, os, socket, math, multiprocessing, json, threading
+import time
+import datetime
+import sys
+import os
+import socket
+import math
+import multiprocessing
+import json
+import threading
 
 try:
     # Windows
@@ -390,7 +398,7 @@ def esegui_benchmark_multicore():
     data_e_ora = datetime.datetime.now()
     info_python = sys.version
 
-    report_testo = [f"--- Report Test di Velocità Multi-Core (3 Fasi) ---"]
+    report_testo = ["--- Report Test di Velocità Multi-Core (3 Fasi) ---"]
     report_testo.append(f"Nome Computer: {nome_computer}")
     report_testo.append(f"Data e Ora: {data_e_ora.strftime('%Y-%m-%d %H:%M:%S')}")
     report_testo.append(f"Versione Python: {info_python.splitlines()[0]}")
@@ -524,7 +532,7 @@ def suona_allarme():
     ora_str = now.strftime('%H:%M:%S')
 
     # Messaggio di conclusione che include data e ora
-    print(f"\n\n-- SVEGLIA/TIMER CONCLUSO --")
+    print("\n\n-- SVEGLIA/TIMER CONCLUSO --")
     print(f"Alle ore {ora_str} di {giorno_settimana} {data_str}", flush=True)
 
     # Sequenza di beep
@@ -675,7 +683,7 @@ def main():
     prompt_needed = True
     while True:
         if prompt_needed:
-            print(f"\n\nMenu principale ('?' per aiuto) > ", end="", flush=True)
+            print("\n\nMenu principale ('?' per aiuto) > ", end="", flush=True)
             prompt_needed = False
         if kbhit():
             key = getch()
