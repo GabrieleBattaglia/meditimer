@@ -15,42 +15,14 @@ import multiprocessing
 import json
 import threading
 
+# Aggiunta percorso per importare GBUtils
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'GBUtils')))
 try:
-    # Windows
-    import msvcrt
-    def kbhit():
-        return msvcrt.kbhit()
-    def getch():
-        ch = msvcrt.getch()
-        # Se il byte è un prefisso per tasti speciali (es. frecce, F1-F12),
-        # leggiamo anche il secondo byte per pulire il buffer di input
-        # e restituiamo una stringa vuota per ignorare l'input.
-        if ch in (b'\x00', b'\xe0'):
-            msvcrt.getch()
-            return ''
-        try:
-            # Altrimenti, proviamo a decodificare il byte come un carattere normale.
-            return ch.decode('utf-8').lower()
-        except UnicodeDecodeError:
-            # Se la decodifica fallisce per qualsiasi altro motivo, ignoriamo l'input.
-            return ''
+    from GBUtils import key as gb_key
 except ImportError:
-    # Unix-like (nessuna modifica necessaria qui, ma il codice resta per compatibilità)
-    import termios
-    import tty
-    import select
-    def kbhit():
-        return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
-    def getch():
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch.lower()
-VERSIONE = "2.9.0 del 3 ottobre 2025"
+    print("Errore: Impossibile importare GBUtils.")
+    sys.exit(1)
+VERSIONE = "2.9.1 del 15 maggio 2026"
 MNMENU={'a':'per avviare/pausa',
   's':"Per registrare l'ultimo giro e fermare",
   'z':'Per azzerare',
@@ -685,8 +657,9 @@ def main():
         if prompt_needed:
             print("\n\nMenu principale ('?' per aiuto) > ", end="", flush=True)
             prompt_needed = False
-        if kbhit():
-            key = getch()
+        key = gb_key(attesa=0.01)
+        if key:
+            key = key.lower()
             if key == 'a':
                 stopwatch.start_pause()
             elif key == '?':
@@ -735,7 +708,6 @@ def main():
                 salva_report(stopwatch)
                 print("\nArrivederci!")
                 break
-        time.sleep(0.01)
 
 if __name__ == "__main__":
     # Assicurati che il programma non si blocchi quando eseguito come eseguibile compilato
