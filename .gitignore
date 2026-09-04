@@ -2,3 +2,4 @@ dist/
 built/
 __pycache__/
 *.txt
+*.zip
