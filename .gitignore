@@ -4,6 +4,7 @@ __pycache__/
 build/
 dist/
 *.zip
+*.exe
 .pytest_cache/
 .ruff_cache/
 # I file che il programma produce usandolo: i report delle sessioni e dei banchi di prova
