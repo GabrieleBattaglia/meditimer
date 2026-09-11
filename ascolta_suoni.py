@@ -1,6 +1,6 @@
 # Meditimer, utilita': fa sentire uno per uno i suoni del programma.
 # Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode).
-# 11/09/2026: nasce con la revisione 1, per collaudare i trentasette preset nuovi.
+# 11/09/2026: nasce con la revisione 1, per collaudare i trentotto preset nuovi.
 
 """Ascolto guidato dei suoni di Meditimer.
 
@@ -19,6 +19,7 @@ from suoni import EVENTI, suona
 
 ORDINE = (
     "avvio",
+    "pulizia",
     "cronometro_avviato",
     "giro",
     "giro_piu_veloce",

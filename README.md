@@ -46,7 +46,7 @@ Dal codice sorgente:
 
 ## I file
 
-Tutto nasce nella cartella del programma, accanto all'eseguibile: i report delle sessioni, `Meditimer` seguito da data e ora; i report delle prove, `benchmark` seguito dal nome del computer e dalla data; l'archivio `benchmark_results.json`, con la copia di riserva `.bak`. Per confrontare macchine diverse basta portare l'archivio da una all'altra e fare la prova anche lì.
+Tutto nasce nella cartella del programma, accanto all'eseguibile: i report delle sessioni, `Meditimer` seguito da data e ora; i report delle prove, `benchmark` seguito dal nome del computer e dalla data; l'archivio `benchmark_results.json`, con la copia di riserva `.bak`. Per confrontare macchine diverse basta portare l'archivio da una all'altra e fare la prova anche lì. A ogni avvio i report di testo più vecchi di un anno vengono cancellati; l'archivio non si tocca mai.
 
 ## Accessibilità
 
@@ -54,6 +54,6 @@ Output lineare, senza tabelle, righe di trattini o animazioni. Ogni messaggio va
 
 ## Sviluppo
 
-I moduli: `meditimer.py` è il ciclo dei tasti, `cronometro.py` il cronometro, `sveglie.py` timer e sveglie, `banco_prova.py` le misure, `sensori.py` la lettura di HWiNFO, `classifiche.py` l'archivio, `suoni.py` la mappa dei suoni, `formati.py` i formati, `percorsi.py` i percorsi, `version.py` la versione. Le prove automatiche stanno in `tests`, si eseguono con `python -m pytest tests -q`, e il codice passa `ruff check` con la configurazione di `ruff.toml`. `ascolta_suoni.py` fa sentire i suoni uno per uno. `meditimer.spec` compila con PyInstaller un eseguibile in un file unico, e `zip_maker.py` prepara l'archivio della release.
+I moduli: `meditimer.py` è il ciclo dei tasti, `cronometro.py` il cronometro, `sveglie.py` timer e sveglie, `banco_prova.py` le misure, `sensori.py` la lettura di HWiNFO, `classifiche.py` l'archivio, `pulizia.py` la cancellazione dei report vecchi, `suoni.py` la mappa dei suoni, `formati.py` i formati, `percorsi.py` i percorsi, `version.py` la versione. Le prove automatiche stanno in `tests`, si eseguono con `python -m pytest tests -q`, e il codice passa `ruff check` con la configurazione di `ruff.toml`. `ascolta_suoni.py` fa sentire i suoni uno per uno. `meditimer.spec` compila con PyInstaller un eseguibile in un file unico, e `zip_maker.py` prepara l'archivio della release.
 
 Licenza: GPL 3, vedi `LICENSE`.

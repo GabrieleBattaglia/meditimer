@@ -8,7 +8,7 @@ Il changelog nasce con la versione 3.0.0. Per le versioni precedenti il resocont
 Revisione 1 del refactoring generale del parco software. Il programma è stato riscritto in moduli, e la versione cambia di numero maggiore perché cambiano i comandi, i suoni, il banco di prova e il formato dell'archivio.
 
 ### Aggiunto
-- **Un suono per ogni tasto.** Trentasette suoni nuovi nella collezione condivisa, tutti brevi e morbidi. I giri hanno un suono diverso a seconda dell'esito: più veloce o più lento del precedente, nella media, uguale, nuovo primato in un verso o nell'altro. La suoneria di timer e sveglie è l'unico suono fatto per farsi notare, e la zittisce un tasto qualsiasi.
+- **Un suono per ogni tasto.** Trentotto suoni nuovi nella collezione condivisa, tutti brevi e morbidi. I giri hanno un suono diverso a seconda dell'esito: più veloce o più lento del precedente, nella media, uguale, nuovo primato in un verso o nell'altro. La suoneria di timer e sveglie è l'unico suono fatto per farsi notare, e la zittisce un tasto qualsiasi.
 - **Timer e sveglie sotto controllo.** Il tasto l li elenca con l'orario di scadenza e quanto manca, e permette di annullarne uno. Ogni avviso è numerato. Uscendo dal programma vengono annullati.
 - **La sintassi della sveglia.** 13:02 è quell'orario; 13 sono le tredici; 5 è il minuto cinque dell'ora in corso, o della prossima se è passato; +5 è fra cinque minuti e +2:08 fra due ore e otto minuti.
 - **Il banco di prova in nove fasi.** Alle tre prove del processore su tutti i core si aggiungono le stesse su un core solo, con il fattore di scala; la copia in memoria su un core e su tutti, che è la misura che vede la frequenza della RAM; e il disco, scrittura con sincronizzazione forzata e rilettura senza la cache di sistema. Si sceglie la durata fra breve, normale e lunga; ogni fase è annunciata con un suono e riassunta con il risultato; escape fra una fase e l'altra annulla.
@@ -20,6 +20,7 @@ Revisione 1 del refactoring generale del parco software. Il programma è stato r
 - **Statistiche dei giri più ricche:** mediana, scarto medio in tempo e in percentuale, totale dei giri, e i pari merito detti per nome.
 - **Controllo degli aggiornamenti** all'avvio del programma compilato, come negli altri programmi del parco.
 - **Ctrl più C** esce in modo ordinato, salvando il report, invece di buttare via la sessione.
+- **Pulizia dei report vecchi.** A ogni avvio i report di testo più vecchi di un anno, quelli delle sessioni e quelli delle prove, vengono cancellati, e il programma dice quanti; l'archivio delle prove non si tocca mai.
 - **Prove automatiche** nella cartella tests, novantasette, su cronometro, formati, timer e sveglie, archivio, banco di prova, sensori e una sessione intera del programma.
 - I file requirements.txt, ruff.toml, ascolta_suoni.py per sentire i suoni uno per uno, e il changelog.
 

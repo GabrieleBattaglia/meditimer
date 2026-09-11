@@ -1,65 +1,263 @@
 {
-    "GabryBat": {
-        "nome_computer": "GabryBat",
-        "data_test": "2025-12-28T11:39:57.758852",
-        "info_python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
-        "num_core": 32,
-        "test": {
-            "int": {
-                "nome_test": "Calcoli su Interi",
-                "performance_totale": 402691428.80153507
+    "formato": 2,
+    "macchine": {
+        "GabryBat": {
+            "scheda": {
+                "nome_computer": "GabryBat",
+                "processore": "13th Gen Intel(R) Core(TM) i9-13900KF",
+                "architettura": "AMD64",
+                "processori_logici": 32,
+                "sistema": "Windows-11-10.0.26200-SP0",
+                "python": "3.14.5",
+                "python_completo": "3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)]",
+                "core_fisici": 24,
+                "frequenza_mhz": 3000,
+                "ram_gb": 63.8,
+                "alimentazione": "rete"
             },
-            "float": {
-                "nome_test": "Calcoli su Float",
-                "performance_totale": 618925929.4573708
-            },
-            "math": {
-                "nome_test": "Funzioni Matematiche",
-                "performance_totale": 236513936.3458177
-            }
+            "prove": [
+                {
+                    "data": "2025-12-28T11:39:57.758852",
+                    "versione": "2.9.1",
+                    "profilo": "normale",
+                    "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+                    "scheda": {
+                        "nome_computer": "GabryBat",
+                        "python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+                        "processori_logici": 32
+                    },
+                    "cpu_multi": {
+                        "int": {
+                            "op_s": 402691428.80153507
+                        },
+                        "float": {
+                            "op_s": 618925929.4573708
+                        },
+                        "math": {
+                            "op_s": 236513936.3458177
+                        }
+                    },
+                    "nota": ""
+                },
+                {
+                    "data": "2026-09-11T10:35:28",
+                    "versione": "3.0.0",
+                    "profilo": "normale",
+                    "python": "3.14.5",
+                    "scheda": {
+                        "nome_computer": "GabryBat",
+                        "processore": "13th Gen Intel(R) Core(TM) i9-13900KF",
+                        "architettura": "AMD64",
+                        "processori_logici": 32,
+                        "sistema": "Windows-11-10.0.26200-SP0",
+                        "python": "3.14.5",
+                        "python_completo": "3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)]",
+                        "core_fisici": 24,
+                        "frequenza_mhz": 3000,
+                        "ram_gb": 63.8,
+                        "alimentazione": "rete"
+                    },
+                    "cpu_multi": {
+                        "int": {
+                            "op_s": 419745312.3171738,
+                            "per_processo": [
+                                13520388.237261202,
+                                13513190.54076342,
+                                12698769.649940426,
+                                12887766.362926845,
+                                13502918.577399941,
+                                13522934.413770488,
+                                12719369.346317828,
+                                13542005.612221444,
+                                12649028.280006541,
+                                13289745.246248454,
+                                13539191.741089256,
+                                12627972.47102172,
+                                12743653.3582259,
+                                13167073.797524812,
+                                13552069.6433695,
+                                12709193.391224597,
+                                12764669.36479244,
+                                12746180.75325962,
+                                12768579.187215382,
+                                12671972.375101935,
+                                13268256.347432459,
+                                12728937.882782478,
+                                12635257.419180034,
+                                13629992.094603892,
+                                12840773.291193724,
+                                13492484.888409846,
+                                13521479.447352152,
+                                13430780.525366532,
+                                12995176.348778602,
+                                13579769.852908624,
+                                12937465.198217189,
+                                13548266.671266507
+                            ],
+                            "durata": 10.000025943750643
+                        },
+                        "float": {
+                            "op_s": 436036079.95060015,
+                            "per_processo": [
+                                14518394.91856534,
+                                14507793.181338063,
+                                14486372.765622629,
+                                12784592.968476137,
+                                14500127.789362373,
+                                12827077.80915441,
+                                13018257.16992983,
+                                14447673.99418852,
+                                14497392.461351259,
+                                12658957.972261883,
+                                12858264.2540245,
+                                12588173.942473866,
+                                12865186.620207002,
+                                12698963.046013342,
+                                12704012.088241713,
+                                12822449.479556205,
+                                14524945.095712202,
+                                12781200.817879695,
+                                12855293.05814501,
+                                12799449.954151431,
+                                12713406.556462552,
+                                13728016.808223939,
+                                13119509.737772994,
+                                13580687.09834783,
+                                14055070.203249263,
+                                14594768.329355808,
+                                14282999.87616711,
+                                14499556.356330087,
+                                14486992.75650117,
+                                14482262.780585753,
+                                14205668.88958597,
+                                14542561.171362283
+                            ],
+                            "durata": 10.000030631249729
+                        },
+                        "math": {
+                            "op_s": 187148445.11831582,
+                            "per_processo": [
+                                6311061.818079147,
+                                6397492.834809323,
+                                5397799.514198272,
+                                6424414.555290209,
+                                6413304.634161869,
+                                6280870.605525669,
+                                5458151.91368085,
+                                5392332.434074091,
+                                5303023.053136073,
+                                5421391.81369914,
+                                6227879.385720864,
+                                6286998.113899928,
+                                5469109.814380862,
+                                5289079.95438442,
+                                5408560.030743976,
+                                5345048.740981166,
+                                5300577.048500166,
+                                5332285.709474117,
+                                5295398.0407032175,
+                                5329552.940045956,
+                                5406662.531826591,
+                                6400789.82274586,
+                                6299291.36997386,
+                                6172670.000824419,
+                                6308691.104746662,
+                                5316365.390460809,
+                                6358156.319466564,
+                                6410574.870546396,
+                                6421829.359876489,
+                                6399345.349588975,
+                                5283480.926634702,
+                                6286255.116135168
+                            ],
+                            "durata": 10.000061968749606
+                        }
+                    },
+                    "cpu_singolo": {
+                        "int": 29609008.725812126,
+                        "float": 33948062.17085551,
+                        "math": 14271625.886167549
+                    },
+                    "memoria": {
+                        "singolo_gb_s": 18.715384429009397,
+                        "megabyte_singolo": 128,
+                        "multi_gb_s": 28.86904129929152,
+                        "megabyte_multi": 32,
+                        "processi": 32
+                    },
+                    "nota": "",
+                    "disco": {
+                        "scrittura_mb_s": 1533.5838846314782,
+                        "lettura_mb_s": 3104.3192909708587,
+                        "senza_cache": true,
+                        "megabyte": 256
+                    }
+                }
+            ]
         },
-        "nota_utente": ""
-    },
-    "PC-Battaglia": {
-        "nome_computer": "PC-Battaglia",
-        "data_test": "2025-11-05T10:02:43.587684",
-        "info_python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
-        "num_core": 12,
-        "test": {
-            "int": {
-                "nome_test": "Calcoli su Interi",
-                "performance_totale": 56385611.00637879
+        "PC-Battaglia": {
+            "scheda": {
+                "nome_computer": "PC-Battaglia",
+                "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+                "processori_logici": 12
             },
-            "float": {
-                "nome_test": "Calcoli su Float",
-                "performance_totale": 82168775.98485285
-            },
-            "math": {
-                "nome_test": "Funzioni Matematiche",
-                "performance_totale": 36608394.78644587
-            }
+            "prove": [
+                {
+                    "data": "2025-11-05T10:02:43.587684",
+                    "versione": "2.9.1",
+                    "profilo": "normale",
+                    "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+                    "scheda": {
+                        "nome_computer": "PC-Battaglia",
+                        "python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+                        "processori_logici": 12
+                    },
+                    "cpu_multi": {
+                        "int": {
+                            "op_s": 56385611.00637879
+                        },
+                        "float": {
+                            "op_s": 82168775.98485285
+                        },
+                        "math": {
+                            "op_s": 36608394.78644587
+                        }
+                    },
+                    "nota": ""
+                }
+            ]
         },
-        "nota_utente": ""
-    },
-    "GabryMiniPC-GPD": {
-        "nome_computer": "GabryMiniPC-GPD",
-        "data_test": "2025-10-06T05:39:32.111677",
-        "info_python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
-        "num_core": 8,
-        "test": {
-            "int": {
-                "nome_test": "Calcoli su Interi",
-                "performance_totale": 39197564.8028525
+        "GabryMiniPC-GPD": {
+            "scheda": {
+                "nome_computer": "GabryMiniPC-GPD",
+                "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+                "processori_logici": 8
             },
-            "float": {
-                "nome_test": "Calcoli su Float",
-                "performance_totale": 52030525.24095598
-            },
-            "math": {
-                "nome_test": "Funzioni Matematiche",
-                "performance_totale": 20080678.488009594
-            }
-        },
-        "nota_utente": "Mini a batteria"
+            "prove": [
+                {
+                    "data": "2025-10-06T05:39:32.111677",
+                    "versione": "2.9.1",
+                    "profilo": "normale",
+                    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+                    "scheda": {
+                        "nome_computer": "GabryMiniPC-GPD",
+                        "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+                        "processori_logici": 8
+                    },
+                    "cpu_multi": {
+                        "int": {
+                            "op_s": 39197564.8028525
+                        },
+                        "float": {
+                            "op_s": 52030525.24095598
+                        },
+                        "math": {
+                            "op_s": 20080678.488009594
+                        }
+                    },
+                    "nota": "Mini a batteria"
+                }
+            ]
+        }
     }
 }

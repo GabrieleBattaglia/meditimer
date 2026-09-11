@@ -1,7 +1,7 @@
 Collaudo di Meditimer 3.0.0, revisione 1
 Ogni prova ha un titolo, cosa fare, cosa osservare e la riga Esito, da riempire con cio' che non va. Le prove superate si cancellano. Quando il file e' vuoto si cancella anche lui.
 Prova 1, i suoni
-Cosa fare: dalla cartella del progetto lancia python ascolta_suoni.py. Per ognuno dei trentasette suoni leggi la descrizione, premi invio per sentirlo, spazio per risentirlo, invio per passare al successivo.
+Cosa fare: dalla cartella del progetto lancia python ascolta_suoni.py. Per ognuno dei trentotto suoni leggi la descrizione, premi invio per sentirlo, spazio per risentirlo, invio per passare al successivo.
 Cosa osservare: che i suoni siano brevi e non aggressivi, che i sette suoni dei giri si distinguano fra loro a orecchio senza leggere, che la suoneria si faccia notare senza essere fastidiosa, che nessun suono schiocchi all'inizio o alla fine.
 Esito:
 Prova 2, una sessione di cronometraggio con le pause

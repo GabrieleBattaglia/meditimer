@@ -28,6 +28,7 @@ except ImportError:
 
 EVENTI = {
     "avvio": "meditimer_avvio",
+    "pulizia": "meditimer_pulizia",
     "chiusura": "meditimer_chiusura",
     "cronometro_avviato": "meditimer_cronometro_avviato",
     "cronometro_pausa": "meditimer_cronometro_pausa",

@@ -33,6 +33,7 @@ from GBUtils import dgt, gestisci_aggiornamento, key, manuale
 
 import banco_prova
 import classifiche
+import pulizia
 import suoni
 from cronometro import Cronometro, righe_report
 from formati import data_italiana, ora_breve, stringa_tempo_descrittiva, tempo_compatto
@@ -456,6 +457,18 @@ class Sessione:
         suoni.chiudi()
 
 
+def pulisci_report():
+    """Cancella i report piu' vecchi di un anno e lo dice, solo se ne ha cancellato qualcuno."""
+    cancellati, errori = pulizia.rimuovi_report_vecchi(cartella_programma())
+    if cancellati:
+        if len(cancellati) == 1:
+            dire(f"Cancellato un report più vecchio di un anno, {cancellati[0]}.")
+        else:
+            dire(f"Cancellati {len(cancellati)} report più vecchi di un anno.")
+        suoni.suona("pulizia")
+    dire_righe(errori)
+
+
 def main():
     print(f"Meditimer, l'affetta tempo, versione {VERSION} del {DATE}.")
     print(f"Autori: {AUTHOR}.")
@@ -464,8 +477,9 @@ def main():
         suoni.suona("chiusura", sync=True)
         suoni.chiudi()
         return 0
+    print("Premi ? per l'elenco dei comandi, q per uscire.", end="", flush=True)
+    pulisci_report()
     sessione = Sessione()
-    print("Premi ? per l'elenco dei comandi, q per uscire.")
     prompt_da_stampare = True
     try:
         while True:

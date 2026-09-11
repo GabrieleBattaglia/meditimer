@@ -1,0 +1,65 @@
+{
+    "GabryBat": {
+        "nome_computer": "GabryBat",
+        "data_test": "2025-12-28T11:39:57.758852",
+        "info_python": "3.13.2 (tags/v3.13.2:4f8bb39, Feb  4 2025, 15:23:48) [MSC v.1942 64 bit (AMD64)]",
+        "num_core": 32,
+        "test": {
+            "int": {
+                "nome_test": "Calcoli su Interi",
+                "performance_totale": 402691428.80153507
+            },
+            "float": {
+                "nome_test": "Calcoli su Float",
+                "performance_totale": 618925929.4573708
+            },
+            "math": {
+                "nome_test": "Funzioni Matematiche",
+                "performance_totale": 236513936.3458177
+            }
+        },
+        "nota_utente": ""
+    },
+    "PC-Battaglia": {
+        "nome_computer": "PC-Battaglia",
+        "data_test": "2025-11-05T10:02:43.587684",
+        "info_python": "3.13.3 (tags/v3.13.3:6280bb5, Apr  8 2025, 14:47:33) [MSC v.1943 64 bit (AMD64)]",
+        "num_core": 12,
+        "test": {
+            "int": {
+                "nome_test": "Calcoli su Interi",
+                "performance_totale": 56385611.00637879
+            },
+            "float": {
+                "nome_test": "Calcoli su Float",
+                "performance_totale": 82168775.98485285
+            },
+            "math": {
+                "nome_test": "Funzioni Matematiche",
+                "performance_totale": 36608394.78644587
+            }
+        },
+        "nota_utente": ""
+    },
+    "GabryMiniPC-GPD": {
+        "nome_computer": "GabryMiniPC-GPD",
+        "data_test": "2025-10-06T05:39:32.111677",
+        "info_python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+        "num_core": 8,
+        "test": {
+            "int": {
+                "nome_test": "Calcoli su Interi",
+                "performance_totale": 39197564.8028525
+            },
+            "float": {
+                "nome_test": "Calcoli su Float",
+                "performance_totale": 52030525.24095598
+            },
+            "math": {
+                "nome_test": "Funzioni Matematiche",
+                "performance_totale": 20080678.488009594
+            }
+        },
+        "nota_utente": "Mini a batteria"
+    }
+}

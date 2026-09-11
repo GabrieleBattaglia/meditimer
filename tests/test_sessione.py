@@ -212,6 +212,23 @@ def test_ctrl_c_esce_salvando(banco, tmp_path, capsys):
     assert len([f for f in os.listdir(tmp_path) if f.startswith("Meditimer-")]) == 1
 
 
+def test_pulizia_dei_report_vecchi_all_avvio(banco, tmp_path, capsys):
+    vecchio = tmp_path / "Meditimer-250101-120000.txt"
+    vecchio.write_text("x", encoding="utf-8")
+    remoto = time.time() - 400 * 86400
+    os.utime(vecchio, (remoto, remoto))
+    recente = tmp_path / "benchmark-X-20260901-120000.txt"
+    recente.write_text("x", encoding="utf-8")
+    copione = banco(["q"])
+    assert meditimer.main() == 0
+    uscita = capsys.readouterr().out
+    assert "Cancellato un report più vecchio di un anno, Meditimer-250101-120000.txt." in uscita
+    assert "\n\n" not in uscita.replace("\n\r", "\n")
+    assert not vecchio.exists()
+    assert recente.exists()
+    assert copione.suonati[:2] == ["avvio", "pulizia"]
+
+
 def test_senza_console_esce(banco, capsys):
     banco([EOFError()])
     assert meditimer.main() == 0
