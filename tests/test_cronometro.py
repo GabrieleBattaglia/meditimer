@@ -102,6 +102,20 @@ def test_descrizione_del_giro_dice_rispetto_a_che_cosa(crono, orologio):
     assert registro[2].delta_media == pytest.approx(-14.29, abs=0.01)
 
 
+def test_riga_compatta_del_giro(crono, orologio):
+    _registra(crono, orologio, [1.0, 1.1, 0.9, 0.9, 5.0])
+    compatti = [g.compatto() for g in crono.registro]
+    assert compatti[0] == "g1 00:01.000"
+    assert compatti[1] == "g2 00:01.100 pl10,0%"
+    assert compatti[2] == "g3 00:00.900 pv18,2% mv14,3% rv"
+    assert compatti[3] == "g4 00:00.900 pu mv10,0%"
+    assert compatti[4] == "g5 00:05.000 pl455,6% ml412,8% rl"
+    assert all(len(c) <= 40 for c in compatti)
+    estremo = cr.Giro(999, 35999.999, 999.9, -999.9, "record_lento")
+    assert estremo.compatto() == "g999 9:59:59.999 pl999,9% mv999,9% rl"
+    assert len(estremo.compatto()) <= 40
+
+
 def test_giro_uguale_e_pari_alla_media(crono, orologio):
     _registra(crono, orologio, [1.0, 1.0, 1.0])
     ultimo = crono.registro[-1]

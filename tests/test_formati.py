@@ -23,6 +23,14 @@ def test_tempo_a_parole_arrotonda_i_millisecondi_con_riporto():
     assert f.stringa_tempo_descrittiva(1.9995) == "2 secondi"
 
 
+def test_tempo_compatto():
+    assert f.tempo_compatto(62.345) == "01:02.345"
+    assert f.tempo_compatto(3723.456) == "1:02:03.456"
+    assert f.tempo_compatto(0) == "00:00.000"
+    assert f.tempo_compatto(59.9996) == "01:00.000"
+    assert f.tempo_compatto(-1) == "00:00.000"
+
+
 def test_numeri_all_italiana():
     assert f.numero_it(1234.5) == "1.234,5"
     assert f.numero_it(1234567, 0) == "1.234.567"

@@ -6,7 +6,7 @@ Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode). Ver
 
 ## Che cosa fa
 
-- Cronometro con giri: ogni giro viene detto a parole, con la variazione in percentuale rispetto al giro precedente e alla media, e con un suono diverso a seconda che sia più veloce, più lento, nella media o un nuovo primato. Le pause non entrano nei giri.
+- Cronometro con giri: ogni giro compare come una riga breve entro quaranta caratteri, per esempio `g3 01:02.345 pv3,1% ml1,2% rv`, cioè numero, tempo, confronto con il precedente e con la media in lettere e percentuali, primato; e ha un suono diverso a seconda che sia più veloce, più lento, nella media o un nuovo primato. Nel report salvato ogni giro è scritto per esteso. Le pause non entrano nei giri.
 - Statistiche dei giri: il più veloce e il più lento, la differenza, la media, la mediana, lo scarto medio, il totale.
 - Report di ogni sessione in un file di testo, una frase per riga.
 - Timer e sveglie quanti ne vuoi, con elenco, annullamento e una suoneria che si zittisce con un tasto qualsiasi. La sveglia si scrive come 13:02, oppure 13 per le tredici, 5 per il minuto cinque, +5 per fra cinque minuti.

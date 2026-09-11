@@ -52,6 +52,16 @@ def stringa_tempo_descrittiva(secondi):
     return ", ".join(parti[:-1]) + " e " + parti[-1]
 
 
+def tempo_compatto(secondi):
+    """Un tempo in cifre per la riga in tempo reale: 01:02.345, con le ore davanti solo se ci sono, 1:02:03.456."""
+    millesimi = round(max(0.0, float(secondi)) * 1000)
+    ore, resto = divmod(millesimi, 3_600_000)
+    minuti, resto = divmod(resto, 60_000)
+    sec, ms = divmod(resto, 1000)
+    testo = f"{minuti:02d}:{sec:02d}.{ms:03d}"
+    return f"{ore}:{testo}" if ore else testo
+
+
 def numero_it(valore, decimali=1):
     """Un numero con la virgola decimale e il punto delle migliaia, all'italiana."""
     testo = f"{float(valore):,.{decimali}f}"

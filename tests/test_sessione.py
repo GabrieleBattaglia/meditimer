@@ -86,12 +86,14 @@ def test_sessione_di_cronometraggio(banco, tmp_path, capsys):
     assert meditimer.main() == 0
     uscita = capsys.readouterr().out
     assert "Cronometro avviato." in uscita
-    assert "Giro 1:" in uscita
-    assert "Giro 2:" in uscita and "del precedente" in uscita
-    assert "Giro 3:" in uscita
-    assert "Cronometro fermato a" in uscita
+    assert "\n\rg1 00:00." in uscita
+    assert "\n\rg2 00:00." in uscita and (" pv" in uscita or " pl" in uscita or " pu" in uscita)
+    assert "\n\rg3 00:00." in uscita
+    assert "\n\rfermato a 00:00." in uscita
+    assert "Giro 1:" not in uscita
     assert "Statistiche di 3 giri." in uscita
-    assert "Tempo trascorso:" in uscita and ", in pausa." in uscita
+    assert "\n\rtrascorso 00:00." in uscita and ", in pausa\r" in uscita
+    assert "Riga del giro: g numero" in uscita
     assert "Cronometro ripreso." in uscita
     assert "Metti in pausa il cronometro prima di azzerarlo" in uscita
     assert "Oggi è" in uscita
@@ -107,6 +109,7 @@ def test_sessione_di_cronometraggio(banco, tmp_path, capsys):
     testo = (tmp_path / report[0]).read_text(encoding="utf-8")
     assert "Nota: la nota della prova." in testo
     assert "Giri registrati: 3." in testo
+    assert "Giro 1: " in testo and "Giro 2: " in testo and "del precedente" in testo
     assert "\n\n" not in testo
     assert copione.suonati[:3] == ["avvio", "cronometro_avviato", "giro"]
     assert "tasto_sconosciuto" in copione.suonati

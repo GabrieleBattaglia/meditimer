@@ -20,14 +20,15 @@ v: da quanto tempo gira il programma.
 b: banco di prova della macchina.
 n: classifiche dei banchi di prova.
 m: questo manuale, una pagina alla volta.
-?: l'elenco dei comandi.
+?: l'elenco dei comandi, con la legenda della riga del giro.
 q: salva il report della sessione, se c'è qualcosa da salvare, ed esce.
 Un tasto qualsiasi, mentre suona un timer o una sveglia, zittisce la suoneria senza fare altro.
 Ctrl più C esce come q, salvando il report.
 Un tasto non previsto viene detto a parole, con il suo suono, e non fa niente.
 3. Il cronometro e i giri
 Il cronometro parte con a. Ogni pressione della barra spaziatrice chiude un giro, cioè misura il tempo passato dal giro precedente, o dall'avvio per il primo. Le pause non entrano nei giri: se metti in pausa a metà di un giro e riprendi dopo un'ora, il giro conta solo il tempo in cui il cronometro andava. Il tempo trascorso, che chiedi con c, è la somma dei giri più il pezzo in corso.
-Ogni giro viene detto con una frase, per esempio: Giro 3: 1 minuto e 2 secondi, 3,1% più veloce del precedente, 1,2% più lento della media. Le due percentuali dicono quanto il giro è cambiato rispetto al giro prima e rispetto alla media dei giri fatti fino a quel momento, escluso lui. Il secondo giro ha solo il confronto con il primo. Dal terzo giro in poi, quando il giro è il più veloce di tutti o il più lento di tutti, la frase lo dice.
+Ogni giro viene mostrato con una riga breve, entro quaranta caratteri e fra due ritorni carrello, così il display braille la legge dal primo carattere: per esempio g3 01:02.345 pv3,1% ml1,2% rv. Si legge così. g e il numero del giro. Il tempo in minuti, secondi e millesimi, con le ore davanti solo se ci sono. p e il confronto con il giro precedente, m e il confronto con la media dei giri fatti fino a quel momento, escluso lui: dopo p e m, v vuol dire più veloce, l più lento, u uguale, e la percentuale dice di quanto. rv in fondo è un nuovo giro più veloce di tutti, rl un nuovo giro più lento. Il secondo giro ha solo p; dal terzo in poi anche m e i primati. Nel report salvato su file ogni giro è scritto per esteso, a parole: Giro 3: 1 minuto e 2 secondi, 3,1% più veloce del precedente, 1,2% più lento della media. Nuovo giro più veloce!
+Anche lo stop, la pausa e il tempo trascorso sono righe brevi dello stesso tipo: fermato a 01:02.345, in pausa a 01:02.345, trascorso 01:02.345, in pausa.
 Il suono del giro dice la stessa cosa in un decimo di secondo. Un tic solo è il primo giro. Due tic che salgono: più veloce del precedente. Due tic che scendono: più lento del precedente. Due tic uguali sulla stessa nota: nella media, cioè entro il tre per cento dalla media dei giri precedenti. Tre tic uguali e fitti: uguale al precedente. Un arpeggio brillante che sale: nuovo giro più veloce di tutti. Quattro note che scendono piano: nuovo giro più lento di tutti. Il primato conta più della media, e la media conta più del confronto con il precedente.
 Con f arrivano le statistiche: quanti giri, il più veloce e il più lento con il loro numero, e se due sono a pari merito lo dice, la differenza fra i due, la media, la mediana, lo scarto medio dalla media in tempo e in percentuale, il tempo totale dei giri. Servono almeno due giri.
 Con s chiudi l'ultimo giro e fermi il cronometro. Con a lo riprendi. Con z, a cronometro fermo, salvi il report e riparti da zero. Con q salvi il report ed esci.

@@ -6,7 +6,7 @@ Cosa osservare: che i suoni siano brevi e non aggressivi, che i sette suoni dei 
 Esito:
 Prova 2, una sessione di cronometraggio con le pause
 Cosa fare: python meditimer.py, poi a, aspetta, spazio, spazio, a per la pausa, aspetta almeno dieci secondi, a per riprendere, spazio, s, f, c, z con una nota, q.
-Cosa osservare: che il giro dopo la pausa non contenga i dieci secondi della pausa; che ogni giro dica la variazione rispetto al precedente e dalla terza in poi anche rispetto alla media; che il suono del giro corrisponda alla frase, cioe' piu' veloce, piu' lento, nella media, primato; che le statistiche siano una frase per riga; che z chieda la nota e dica nome e cartella del report; che il report nella cartella del programma sia leggibile riga per riga senza righe vuote ne' trattini; che q con il cronometro azzerato dica che non c'e' niente da salvare.
+Cosa osservare: che il giro dopo la pausa non contenga i dieci secondi della pausa; che ogni giro sia una riga breve del tipo g3 01:02.345 pv3,1% ml1,2% rv, entro quaranta caratteri, letta dal display braille dal primo carattere, con p dal secondo giro e m e i primati dal terzo; che il suono del giro corrisponda al codice, cioe' v, l, u e rv o rl; che stop, pausa e c diano righe dello stesso tipo, fermato a, in pausa a, trascorso; che la legenda in fondo a ? sia chiara; che le statistiche siano una frase per riga; che z chieda la nota e dica nome e cartella del report; che nel report nella cartella del programma ogni giro sia scritto per esteso, a parole, senza righe vuote ne' trattini; che q con il cronometro azzerato dica che non c'e' niente da salvare.
 Esito:
 Prova 3, il display braille
 Cosa fare: durante la prova 2 tieni le dita sul display braille dopo ogni tasto.

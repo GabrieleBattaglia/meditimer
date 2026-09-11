@@ -14,10 +14,13 @@
 Qui stanno il ciclo dei tasti e le frasi dette all'utente: il cronometro,
 gli avvisi, il banco di prova e l'archivio vivono nei loro moduli e non
 stampano. Ogni messaggio va a capo prima e non dopo, cosi' il cursore, e
-con lui il display braille, resta sull'ultima cosa scritta; il prompt
-comincia e finisce con un ritorno carrello, che riporta il cursore al suo
-inizio. I prompt che aspettano un tasto solo passano da key, quelli che
-aspettano una riga da dgt, entrambi di GBUtils.
+con lui il display braille, resta sull'ultima cosa scritta. I dati in
+tempo reale, i giri, lo stop, la pausa e il tempo trascorso, sono righe
+entro quaranta caratteri fra due ritorni carrello, con le lettere come
+codice: il ritorno carrello finale riporta il cursore all'inizio, e il
+display le legge dal primo carattere. La frase per esteso di ogni giro va
+nel file di testo. I prompt che aspettano un tasto solo passano da key,
+quelli che aspettano una riga da dgt, entrambi di GBUtils.
 """
 
 import contextlib
@@ -32,7 +35,7 @@ import banco_prova
 import classifiche
 import suoni
 from cronometro import Cronometro, righe_report
-from formati import data_italiana, ora_breve, stringa_tempo_descrittiva
+from formati import data_italiana, ora_breve, stringa_tempo_descrittiva, tempo_compatto
 from percorsi import cartella_programma, percorso_dati, percorso_risorsa
 from sveglie import GUIDA_DURATA, GUIDA_ORARIO, Registro, interpreta_durata, interpreta_orario
 from version import AUTHOR, DATE, VERSION
@@ -68,12 +71,26 @@ COMANDI = (
     ("q", "salva il report ed esce"),
     ("un tasto qualsiasi", "zittisce la suoneria di un timer o di una sveglia"),
 )
+LEGENDA_GIRO = (
+    "Riga del giro: g numero, tempo, p rispetto al precedente, m rispetto alla media, "
+    "v più veloce, l più lento, u uguale, rv e rl nuovo giro più veloce o più lento"
+)
 TINIZIO = time.monotonic()
 
 
 def dire(testo):
     """Una frase all'utente: a capo prima, non dopo, cosi' il cursore le resta sopra."""
     print("\n" + testo, end="", flush=True)
+
+
+def dire_prompt(testo):
+    """Una riga di dati in tempo reale, entro quaranta caratteri, fra due ritorni carrello.
+
+    Il ritorno carrello finale riporta il cursore all'inizio della riga:
+    il display braille la legge dal primo carattere senza scorrere. E' la
+    forma che Gabriele vuole per tutto cio' che cambia mentre si lavora.
+    """
+    print("\n\r" + testo + "\r", end="", flush=True)
 
 
 def dire_righe(righe):
@@ -183,7 +200,7 @@ class Sessione:
             dire("Cronometro avviato.")
             suoni.suona("cronometro_avviato")
         elif esito == "pausa":
-            dire(f"Cronometro in pausa a {stringa_tempo_descrittiva(self.crono.tempo_trascorso())}.")
+            dire_prompt(f"in pausa a {tempo_compatto(self.crono.tempo_trascorso())}")
             suoni.suona("cronometro_pausa")
         else:
             dire("Cronometro ripreso.")
@@ -197,7 +214,7 @@ class Sessione:
             suoni.suona("errore")
             return False
         suoni.suona_giro(giro.esito)
-        dire(giro.descrizione())
+        dire_prompt(giro.compatto())
         return False
 
     def ferma(self):
@@ -207,8 +224,8 @@ class Sessione:
             return False
         giro = self.crono.giro()
         self.crono.ferma()
-        dire(giro.descrizione())
-        dire(f"Cronometro fermato a {stringa_tempo_descrittiva(self.crono.tempo_trascorso())}.")
+        dire_prompt(giro.compatto())
+        dire_prompt(f"fermato a {tempo_compatto(self.crono.tempo_trascorso())}")
         suoni.suona("cronometro_fermato")
         return False
 
@@ -224,7 +241,7 @@ class Sessione:
             suoni.suona("errore")
             return False
         stato = "" if self.crono.in_corsa else ", in pausa"
-        dire(f"Tempo trascorso: {stringa_tempo_descrittiva(self.crono.tempo_trascorso())}{stato}.")
+        dire_prompt(f"trascorso {tempo_compatto(self.crono.tempo_trascorso())}{stato}")
         suoni.suona("tempo_trascorso")
         return False
 
@@ -406,6 +423,7 @@ class Sessione:
     @staticmethod
     def aiuto():
         dire_righe([f"{tasto}: {descrizione}." for tasto, descrizione in COMANDI])
+        dire(LEGENDA_GIRO + ".")
         return True
 
     # --- Il ciclo ---------------------------------------------------------

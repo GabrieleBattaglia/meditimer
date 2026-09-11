@@ -20,7 +20,7 @@ gia' pensate per lo screen reader, e chi chiama decide cosa dire.
 import time
 from dataclasses import dataclass
 
-from formati import numero_it, percentuale_it, stringa_tempo_descrittiva
+from formati import numero_it, percentuale_it, stringa_tempo_descrittiva, tempo_compatto
 
 # Un giro che sta entro questa distanza dalla media dei precedenti, in
 # percentuale, e' nella media: ne' meglio ne' peggio di come si stava andando.
@@ -46,6 +46,27 @@ class Giro:
     delta_media: float | None
     esito: str
 
+    def compatto(self):
+        """La riga breve per lo schermo, entro quaranta caratteri: g3 01:02.345 pv3,1% ml1,2% rv.
+
+        g e' il numero del giro, poi il tempo in cifre; p e' il confronto con
+        il giro precedente e m quello con la media dei precedenti, seguiti da
+        v se piu' veloce, l se piu' lento, u se uguale, e dalla percentuale;
+        rv in fondo e' un nuovo giro piu' veloce di tutti, rl piu' lento.
+        E' la forma che Gabriele vuole per i dati in tempo reale: la frase
+        per esteso, descrizione, va nel file di testo.
+        """
+        parti = [f"g{self.numero}", tempo_compatto(self.durata)]
+        if self.delta_precedente is not None:
+            parti.append("p" + _codice(self.delta_precedente))
+        if self.delta_media is not None:
+            parti.append("m" + _codice(self.delta_media))
+        if self.esito == "record_veloce":
+            parti.append("rv")
+        elif self.esito == "record_lento":
+            parti.append("rl")
+        return " ".join(parti)
+
     def descrizione(self):
         """La frase del giro, per esempio: Giro 3: 1 minuto e 2 secondi, 3,1% più veloce del precedente."""
         testo = f"Giro {self.numero}: {stringa_tempo_descrittiva(self.durata)}"
@@ -58,6 +79,13 @@ class Giro:
         if self.esito == "record_lento":
             return testo + ". Nuovo giro più lento."
         return testo + "."
+
+
+def _codice(delta):
+    """Il confronto in lettere per la riga breve: u uguale, v3,1% piu' veloce, l3,1% piu' lento."""
+    if abs(delta) < SOGLIA_UGUALE:
+        return "u"
+    return ("v" if delta < 0 else "l") + percentuale_it(abs(delta))
 
 
 def _confronto(delta, riferimento, se_uguale):
