@@ -1,0 +1,250 @@
+Analisi del codice, revisione 1
+Progetto: meditimer, l'affetta tempo: cronometro con giri, timer, sveglia e banco di prova della macchina
+Versione analizzata: 2.9.1 del 15 maggio 2026
+Revisione: 1
+Data: 2026-09-11
+Analisi eseguita da: ClaudIA (Claude Fable 5.1, UltraCode)
+Autori del progetto: Gabriele Battaglia (IZ4APU) & ClaudIA
+Nota sul metodo
+Questa e' la sola analisi, senza correzioni: il codice non e' stato toccato. Le correzioni cominciano dopo le risposte alle domande del punto 6, come chiesto da Gabriele. La riga di meditimer nella tabella del documento di refactoring resta a revisione 0 finche' il rapporto non si e' svuotato e la nuova versione non e' stata pubblicata.
+Questo rapporto sostituisce quello scritto il 2026-09-07 da ClaudIA con Claude Opus 5, che non era mai entrato in git perche' il .gitignore esclude ogni file txt, e che non aveva avuto seguito: il codice e' identico a allora. Ogni rilievo di quel rapporto e' stato riverificato oggi leggendo il codice e riproducendo i casi dubbi con uno script di prova; un rilievo e' stato tolto perche' superato dalla key V7.0.0 di GBUtils, e ne sono stati aggiunti sette nuovi.
+1. File esaminati
+meditimer.py, 715 righe, l'intera applicazione: cronometro con giri, timer, sveglia, banco di prova multi core e classifiche.
+zip_maker.py, 40 righe, preparazione dell'archivio di distribuzione, gia' appoggiato a crea_archivio_release di GBUtils. Solido: il motivo meditimer-*.txt scritto in minuscolo va bene perche' crea_archivio_release confronta tutto in minuscolo.
+meditimer.spec, 38 righe, ricetta di compilazione in un file unico.
+README.md, 103 righe, il manuale per chi scarica.
+benchmark_results.json, 64 righe, i risultati del banco di prova di tre macchine, versionati nel repository.
+.gitignore, 5 righe. LICENSE, 674 righe.
+build, tredici file prodotti da PyInstaller, versionati nel repository.
+File attesi dallo standard del parco software e assenti: version.py, CHANGELOG, requirements.txt, ruff.toml, cartella tests, manuale.
+2. Issue aperte trovate su GitHub
+Issue 1, la cartella build di PyInstaller e' dentro git e le release non hanno allegati, aperta il 2026-09-04. L'analisi la conferma in tutte le parti e nessuna e' stata ancora risolta: git ls-files build elenca tredici file; il .gitignore contiene ancora built con la t di troppo alla riga 2; la release v2.9.1 del 2026-05-21 non ha nessun allegato e il corpo e' il solo link di confronto fra due tag; la nota sul filtro dei txt e' vera e riguarda anche questo rapporto. La issue si chiude con la revisione, vedi il rilievo 16.
+3. Rilievi in ordine di gravita' decrescente
+3.1 Rilievi critici
+Rilievo 1
+Gravita': critico
+Categoria: logica
+File e riga: meditimer.py:88-102 e 109-114
+Problema: il tempo di ogni giro e' la differenza fra l'istante attuale e l'istante dell'ultimo giro, letti sull'orologio di sistema. Le pause non vengono sottratte: start_pause aggiorna _total_pause_time e get_elapsed_time lo usa, ma record_lap non lo considera e _last_lap_time non viene spostato in avanti alla ripresa. L'attributo _last_lap_time nasce fuori dal costruttore, alla riga 93, e reset non lo azzera.
+Verifica: riprodotto oggi con uno script. Avvio, due decimi di secondo, primo giro; pausa di un secondo; ripresa, due decimi di secondo, secondo giro. Giri misurati: 0,2 e 1,2 secondi. Tempo trascorso: 0,4. Somma dei giri: 1,4. La differenza fra i due totali e' esattamente la pausa.
+Impatto per l'utente: il cronometro con i giri e' la ragione per cui il programma esiste, e appena si usa la pausa i giri diventano falsi. Il giro che segue una pausa risulta piu' lento di quanto sia stato, diventa il giro piu' lento, sballa la media, la differenza fra il piu' veloce e il piu' lento e la percentuale del rilievo 2. Tutti questi numeri finiscono nel report salvato su file, dove restano.
+Correzione proposta: misurare i giri sull'orologio interno del cronometro, cioe' sul tempo gia' depurato dalle pause che get_elapsed_time restituisce: il giro e' la differenza fra il tempo trascorso di adesso e il tempo trascorso all'ultimo giro. Cosi' _last_lap_time sparisce, e con lui l'attributo che nasce fuori dal costruttore.
+3.2 Rilievi alti
+Rilievo 2
+Gravita': alto
+Categoria: logica
+File e riga: meditimer.py:118-128
+Problema: dal terzo giro in poi viene mostrato un numero con il segno e il simbolo di percentuale. Quel numero non e' una variazione: e' la posizione del giro appena fatto dentro l'intervallo fra il piu' veloce e il piu' lento dei giri precedenti, cento quando pareggia il record, zero quando pareggia il peggiore, oltre i cento o sotto lo zero quando li supera. Quando i giri precedenti erano tutti uguali la formula cambia e diventa la variazione rispetto a quel valore.
+Verifica: con giri precedenti di 1 e 2 secondi, un giro di 1,5 secondi mostra piu' 50,00 per cento. Con giri precedenti di 1 e 1 secondo, un giro di 0,5 secondi mostra ancora piu' 50,00 per cento, ma calcolato con l'altra formula. Due significati diversi, stessa etichetta.
+Impatto per l'utente: la sintesi vocale legge un numero che sembra dire quanto il giro e' andato meglio o peggio, e invece dice un'altra cosa, che cambia significato a seconda dei dati. Chi cronometra per migliorare si regola su un numero che non misura il miglioramento. Il numero finisce anche nel report.
+Correzione proposta: da decidere con Gabriele, domanda 1 del punto 6. Le scelte sensate sono la variazione rispetto al giro precedente oppure rispetto alla media dei giri fatti fin li', e in ogni caso va detto a parole rispetto a che cosa.
+Rilievo 3
+Gravita': alto
+Categoria: fragilita'
+File e riga: meditimer.py:196-197, 266, 274, 299-301, 315 e 427
+Problema: tutti i file del programma, il report del cronometro, il report del banco di prova e il file delle classifiche, hanno un nome relativo e finiscono nella directory di lavoro corrente, non accanto al programma. La scrittura del report del cronometro alla riga 197 non e' protetta da nessun try. Il punto 3.1 del documento di refactoring elenca la dipendenza dalla directory corrente fra le fragilita' da cercare, e il memorandum sui percorsi in docs dice come si fa.
+Impatto per l'utente: se la scrittura fallisce, per esempio perche' il programma e' stato avviato da una cartella su cui non si scrive, l'eccezione risale e la sessione di cronometraggio va perduta nell'istante in cui l'utente crede di averla salvata. Se la scrittura riesce, il report finisce in una cartella che dipende da come e' stato avviato il programma: dal collegamento e' la cartella dell'eseguibile, dal terminale e' quella in cui ci si trovava. Le classifiche, che vivono nel file json, si sdoppiano allo stesso modo.
+Correzione proposta: una funzione che restituisce la cartella del programma, quella dell'eseguibile se congelato e quella del sorgente altrimenti, come cartella_programma di gabryscola; tutti i percorsi costruiti da li' con os.path.join; scrittura protetta con OSError riferito a parole; percorso completo detto all'utente, non il solo nome.
+Rilievo 4
+Gravita': alto
+Categoria: fragilita'
+File e riga: meditimer.py:259-279
+Problema: salva_risultati_benchmark legge il file delle classifiche, aggiunge il risultato della macchina corrente e riscrive l'intero file aprendolo in scrittura, il che lo tronca prima che il nuovo contenuto esista. Non c'e' scrittura su file temporaneo con sostituzione atomica e non resta nessuna copia di riserva. La cattura e' del solo IOError, che dal Python 3.3 e' un alias di OSError, e ruff lo segnala.
+Impatto per l'utente: un'interruzione durante la riscrittura cancella i risultati di tutte le macchine, non solo di quella corrente. Le classifiche sono la parte del programma che si accumula nel tempo e non si puo' rifare, perche' i risultati vecchi vengono da macchine che magari non esistono piu' o non sono piu' quelle.
+Correzione proposta: scrivere su file temporaneo nella stessa cartella e sostituire con os.replace, conservando la versione precedente come copia .bak, come fa gestione_dati di gabryscola.
+Rilievo 5
+Gravita': alto
+Categoria: fragilita'
+File e riga: meditimer.py:448-453, 471 e 473
+Problema: i dati letti dal file delle classifiche non vengono validati. mostra_classifiche verifica che esistano le chiavi test e il tipo di prova, ma poi legge performance_totale e data_test con l'accesso diretto, passa la data a fromisoformat senza protezione e taglia la nota con una fetta di stringa che, se la nota fosse null, solleva TypeError. Una voce scritta da una versione precedente, o modificata a mano, chiude il programma.
+Impatto per l'utente: il comando delle classifiche esce con una traccia di stack, e con lui se ne va la sessione di cronometraggio in corso, che non e' ancora stata salvata, vedi il rilievo 3. Con il formato del file che cambiera' per l'arricchimento del banco di prova, la validazione al caricamento diventa anche la migrazione delle voci vecchie.
+Correzione proposta: validare le voci al caricamento, scartare quelle incomplete dicendo quante ne sono state scartate, proteggere la conversione della data e accettare le voci del formato attuale accanto a quelle del formato nuovo.
+Rilievo 6
+Gravita': alto
+Categoria: regole generali
+File e riga: meditimer.py:213, 293, 329-330, 347, 400, 412, 464-465, 474, 507, 624-629 e 653
+Problema: quasi tutto cio' che il programma mostra e' costruito con allineamenti a colonne di larghezza fissa e righe di trattini. La classifica ha cinque colonne incolonnate e una riga di cento trattini; il confronto con i risultati precedenti ha quattro colonne e una riga di ottantacinque trattini, e la differenza e' stampata come numero grezzo di operazioni al secondo con due decimali, per esempio piu' 12345678,00, con la variazione a quattro decimali; il report del banco di prova separa le fasi con righe di quaranta trattini; le statistiche dei giri sono incolonnate con corse di spazi e chiuse da ventiquattro trattini; le intestazioni sono racchiuse fra doppi o tripli trattini, anche dentro i file salvati, righe 213 e 293; il saluto iniziale contiene L'AFFETTA TEMPO in maiuscolo, che NVDA puo' leggere lettera per lettera. Il punto 3.4 vieta i separatori grafici e chiede tabelle in forma discorsiva.
+Impatto per l'utente: NVDA legge cento trattini uno per uno, poi righe in cui i valori sono separati da corse di spazi senza dire a quale colonna appartengono. Su display braille una riga larga cento caratteri chiede tre scorrimenti e il nome della colonna e' scomparso in alto.
+Correzione proposta: rendere ogni voce come una frase, per esempio primo, GabryBat, 403 milioni di operazioni al secondo, provato il 28 dicembre 2025, e togliere tutte le righe di trattini, anche dai file. Le funzioni interessate sono quattro.
+Rilievo 7
+Gravita': alto
+Categoria: logica
+File e riga: meditimer.py:497-518, 519-532, 597-603 e 631-650
+Problema: timer e sveglia si avviano ma non si possono ne' fermare, ne' interrogare, ne' contare. Non c'e' un comando per sapere quanto manca, uno per annullare, ne' un elenco degli attivi. Quando l'allarme parte suona per cinquantadue secondi e mezzo, tre serie di cinque campanelli distanziati due secondi e mezzo con cinque secondi fra le serie, e non c'e' modo di zittirlo. Il suono e' il carattere di campanello del terminale, che in alcune configurazioni di Windows e' muto. L'attesa e' una sola chiamata a time.sleep per tutta la durata: da verificare, ma su Windows il tempo in cui la macchina e' sospesa potrebbe non contare, e una sveglia impostata per un orario slitterebbe di tutta la sospensione.
+Impatto per l'utente: chi imposta un timer per sbaglio deve aspettare che scada e poi quasi un minuto di campanelli. Chi non ricorda se l'ha impostato non ha modo di verificarlo. In un programma che si chiama affetta tempo, non poter chiedere quanto manca e' l'assenza che si nota di piu'.
+Correzione proposta: un registro dei timer e delle sveglie attivi, ognuno con un Event: un comando che li elenca con il tempo mancante, uno che ne annulla uno, e l'attesa fatta a passi di un secondo controllando l'orologio di sistema, cosi' l'annullamento e' immediato e la sveglia resta all'orario giusto anche dopo una sospensione. Il suono passa ad Acusticator, e un tasto qualsiasi lo interrompe.
+Rilievo 8
+Gravita': alto
+Categoria: fragilita'
+File e riga: meditimer.py:660, 191, 288, 350, 539 e 635
+Problema: Ctrl piu' C solleva KeyboardInterrupt dentro key, come dice la sua documentazione, e Ctrl piu' Z su un input solleva EOFError. Nessuna delle due viene catturata: il programma esce con una traccia di stack senza salvare il report. Se succede durante il banco di prova, i processi del pool restano a meta'.
+Impatto per l'utente: il riflesso di Ctrl piu' C, comune per chi usa la console, butta via la sessione.
+Correzione proposta: catturare KeyboardInterrupt nel ciclo principale e trattarla come il tasto q, cioe' uscita ordinata con il report; catturare EOFError alle richieste di testo e trattarla come risposta vuota.
+3.3 Rilievi medi
+Rilievo 9
+Gravita': medio
+Categoria: regole generali
+File e riga: meditimer.py:656-711
+Problema: il ciclo principale riconosce quindici tasti e ignora tutti gli altri in silenzio. Il comando c tace quando il cronometro non e' mai partito. Poiche' il prompt non viene ristampato dopo la maggior parte dei comandi, chi preme un tasto sbagliato non ha modo di capire se il programma stia ascoltando.
+Impatto per l'utente: il punto 3.4 chiede messaggi di errore parlanti. Qui non c'e' proprio il messaggio, e per chi non vede lo schermo il silenzio e' indistinguibile da un programma bloccato.
+Correzione proposta: dire che il tasto non e' fra quelli previsti e che il punto interrogativo mostra l'aiuto, con un suono di errore breve; dire che il cronometro non e' partito quando si chiede il tempo trascorso.
+Rilievo 10
+Gravita': medio
+Categoria: logica
+File e riga: meditimer.py:28 e 677-684
+Problema: il menu dichiara che z serve ad azzerare. In realta' il comando, quando il cronometro e' in pausa, salva prima il report della sessione, chiedendo una nota da scrivere nel file, e solo dopo azzera. Chi vuole solo ripartire da zero si trova a scrivere una nota per un file che non aveva chiesto.
+Impatto per l'utente: un comando fa piu' di quanto dichiara, e la cosa in piu' e' proprio quella che il tasto q fa di mestiere.
+Correzione proposta: da decidere con Gabriele, domanda 2 del punto 6.
+Rilievo 11
+Gravita': medio
+Categoria: logica
+File e riga: meditimer.py:570-574
+Problema: nella sveglia, un numero solo viene interpretato come i minuti dell'ora corrente. Chi alle otto e trentatre scrive 5 non ottiene una sveglia fra cinque minuti e nemmeno alle nove e cinque, ma alle otto e cinque di domani.
+Verifica: riprodotto oggi alle 08:33: parse_time_alarm con 5 restituisce le 08:05 del 2026-09-12.
+Impatto per l'utente: una sveglia a ventitre ore e mezza di distanza, senza modo di annullarla finche' vale il rilievo 7. Il prompt dice solo formati H due punti M due punti S, M due punti S o M, e non basta a far capire che cosa significhi quella M da sola.
+Correzione proposta: da decidere con Gabriele, domanda 3 del punto 6.
+Rilievo 12
+Gravita': medio
+Categoria: logica
+File e riga: meditimer.py:481-491
+Problema: parse_time_input accetta un numero qualsiasi di campi e usa solo gli ultimi tre. La stringa 1:2:3:4 viene accettata come due ore, tre minuti e quattro secondi, e il primo campo sparisce in silenzio.
+Verifica: riprodotto oggi, il risultato e' 7384 secondi invece del rifiuto.
+Impatto per l'utente: un errore di battitura produce un timer diverso da quello voluto senza nessun avviso.
+Correzione proposta: rifiutare piu' di tre campi, come gia' fa parse_time_alarm.
+Rilievo 13
+Gravita': medio
+Categoria: DRY
+File e riga: meditimer.py:18-24
+Problema: il programma costruisce a mano il percorso di GBUtils risalendo di un livello e aggiungendolo a sys.path. La cartella GBUtils e' gia' nella path di sistema, come dice CLAUDE.md. Il percorso costruito funziona solo se meditimer sta esattamente accanto a GBUtils, si basa su __file__, che nell'eseguibile congelato punta alla cartella temporanea, e il messaggio di errore nasconde la causa vera: dice impossibile importare GBUtils sia se la libreria manca sia se e' rotta.
+Impatto per l'utente: un errore all'avvio che non dice da dove viene.
+Correzione proposta: togliere le due righe di sys.path e importare direttamente da GBUtils, come fanno tutti gli altri progetti; se l'import fallisce, riferire l'eccezione vera.
+Rilievo 14
+Gravita': medio
+Categoria: DRY
+File e riga: meditimer.py:191, 224-227, 288, 350, 507-518, 539 e 635
+Problema: il programma importa da GBUtils la sola key. Le cinque richieste di testo usano input nudo, mentre dgt valida tipo, limiti e predefinito e riferisce la mancanza di un terminale. La domanda s o n della riga 350 e' un ciclo scritto a mano, mentre enter_escape esiste apposta. Il suono dell'allarme e' il carattere di campanello, mentre Acusticator e' il motore audio del parco software e ha una collezione di suoni pronti, sirene comprese. Non c'e' nessun controllo aggiornamenti, benche' gestisci_aggiornamento esista e sette applicazioni lo usino. Verificato nel codice di perform_update che l'aggiornamento funziona anche con l'eseguibile in un file unico: quando il pacchetto non porta una cartella _internal non c'e' niente da ripulire. L'aiuto resta una stampa a scorrimento: menu non e' lo strumento giusto per un ciclo a tasto singolo e non viene proposto, ma un manuale vero, mostrato con manuale di GBUtils, si'.
+Impatto per l'utente: il programma si comporta in modo diverso da tutti gli altri di Gabriele; la sveglia in certe configurazioni e' muta; chi ha scaricato una release non sapra' mai che ne esiste una nuova.
+Correzione proposta: passare a dgt, enter_escape, Acusticator e manuale; aggiungere gestisci_aggiornamento all'avvio dell'eseguibile e pubblicare la release con l'allegato, come chiede la issue 1.
+Rilievo 15
+Gravita': medio
+Categoria: regole generali
+File e riga: meditimer.py:1-6, 25 e 653
+Problema: l'intestazione elenca sei date fra concepimento, porting e restyling e attribuisce il lavoro a Gabriele, a ChatGPT4o e a un partner di programmazione, senza la riga degli autori nel formato prescritto. La costante VERSIONE contiene la versione e la data di rilascio nella stessa stringa, e projects.json alla radice di mine la ripete. Il saluto iniziale nomina solo Gabriele. Non esiste changelog.
+Impatto per l'utente: chi legge non sa a quale versione corrisponda quale novita', e l'attribuzione non dice chi ha scritto il codice.
+Correzione proposta: un version.py con VERSION, DATE e AUTHOR come gabryscola, la riga degli autori nel formato Gabriele Battaglia (IZ4APU) & ClaudIA (modello, modalita') in ogni file, un CHANGELOG.md scritto per chi usa il programma e aggiornato a ogni versione.
+Rilievo 16
+Gravita': medio
+Categoria: regole generali
+File e riga: .gitignore righe 2 e 4, cartella build, benchmark_results.json
+Problema: tre difetti nello stesso file. La riga 2 dice built con la t di troppo, quindi la cartella build non e' mai stata esclusa e i suoi tredici file sono versionati, come dice la issue 1. La riga 4 esclude ogni file con estensione txt: giusta per i report che il programma produce, esclude anche questo rapporto, il futuro collaudo.txt e qualunque manuale in testo. Infine benchmark_results.json e' versionato e contiene i nomi delle macchine di Gabriele e le note scritte durante le prove.
+Impatto per l'utente: il repository si porta dietro i prodotti della compilazione, i file di lavoro del metodo non ci entrano se non forzati, e i nomi delle macchine sono pubblicati su GitHub.
+Correzione proposta: correggere il refuso e togliere build dal versionamento con git rm -r --cached; sostituire il filtro sui txt con i soli file prodotti dal programma, cioe' Meditimer-*.txt e benchmark-*.txt; sul file delle classifiche decide Gabriele, domanda 4 del punto 6.
+Rilievo 17
+Gravita': medio
+Categoria: regole generali
+File e riga: meditimer.py:360-420
+Problema: il banco di prova dura trenta secondi in tre fasi da dieci. Durante ciascuna fase non arriva nessun segnale: il programma annuncia la fase e poi tace. Non c'e' modo di interrompere la prova. L'annuncio iniziale dice rilevati 32 core, ma quelli sono i processori logici: su questa macchina i core fisici sono 24.
+Impatto per l'utente: trenta secondi di silenzio in cui chi non vede lo schermo non sa se il computer stia lavorando o si sia bloccato. Il punto 3.4 esclude una percentuale che scorre, ma un segnale ci vuole.
+Correzione proposta: un suono breve all'inizio e alla fine di ogni fase, una frase per fase con il risultato appena ottenuto, la possibilita' di annullare con Escape fra una fase e l'altra, e la distinzione fra core e processori logici. Tutto questo rientra nell'arricchimento del punto 7.
+Rilievo 18
+Gravita': medio
+Categoria: regole generali
+File e riga: meditimer.py, tutto il file
+Problema: con la configurazione condivisa di mine, ruff riporta quindici rilievi: I001, blocco di import non ordinato; DTZ005 in otto punti, datetime.now senza fuso orario; FURB122 alla riga 204, write dentro un ciclo; F841 alle righe 245, 250 e 255, tre variabili assegnate e mai usate; UP024 alle righe 278 e 304, IOError alias di OSError. Con le regole che gabryscola ha adottato i rilievi diventano cinquantuno: trenta righe vuote con spazi, tre modi di apertura ridondanti, un else superfluo dopo return e uno dopo break, spazio in coda, nessun ritorno a capo a fine file. Anche ruff format riformatterebbe il file. Non esiste un ruff.toml del progetto.
+Impatto per l'utente: nessuno diretto, ma il punto 3.4 chiede che il codice passi ruff senza rilievi. Le tre variabili di F841 sono un caso a parte: servono, perche' sono il calcolo che il banco di prova misura, e vanno rinominate con l'underscore davanti e spiegate, non tolte. I corpi dei cicli non vanno cambiati, altrimenti i risultati nuovi non sarebbero piu' confrontabili con quelli gia' in classifica.
+Correzione proposta: un ruff.toml come quello di gabryscola, con DTZ ignorata per iscritto perche' data e ora sono di proposito quelle locali; le correzioni automatiche; il resto a mano.
+Rilievo 19
+Gravita': medio
+Categoria: logica
+File e riga: meditimer.py:76-86, 104-107 e 674-676
+Problema: stop chiama start_pause quando il cronometro sta andando, quindi stampa Cronometro in pausa e subito dopo Cronometro fermato, due messaggi diversi per la stessa azione. Se il cronometro non e' mai partito, il tasto s stampa comunque Cronometro fermato. Il costruttore chiama reset, che stampa Cronometro azzerato, quindi la prima cosa che si sente dopo il saluto e' un azzeramento che nessuno ha chiesto.
+Verifica: riprodotto oggi: costruzione, giro e stop senza avvio producono Cronometro azzerato e poi Cronometro fermato.
+Impatto per l'utente: la sintesi vocale legge due frasi contraddittorie di fila, dichiara fermato cio' che non e' mai partito e azzerato cio' che era gia' vuoto.
+Correzione proposta: dare a stop un messaggio proprio senza passare da start_pause, tacere quando non c'e' niente da fermare, separare l'inizializzazione dall'azzeramento voluto dall'utente.
+Rilievo 20
+Gravita': medio
+Categoria: regole generali
+File e riga: README.md righe 16, 20, 33, 34, 36, 85-88
+Problema: il manuale e' rimasto indietro. Dice che il giro si registra con g, mentre dal 3 ottobre 2025 e' la barra spaziatrice; dice che s equivale a mettere in pausa, mentre s registra anche un giro; dice nessuna dipendenza esterna, mentre senza GBUtils il programma non parte; dice che i file nascono nella cartella del programma, mentre nascono nella directory corrente, rilievo 3; il link per scaricare l'eseguibile punta a una ricerca su Google invece che a GitHub; chiede Python 3.8, mentre la key di GBUtils usa annotazioni che richiedono il 3.10.
+Impatto per l'utente: chi legge il manuale preme g e non succede niente.
+Correzione proposta: riscrivere il README a correzioni fatte, insieme a un requirements.txt che dica anche di GBUtils.
+Rilievo 21
+Gravita': medio
+Categoria: logica
+File e riga: meditimer.py:366, 393-404 e 464-474
+Problema: la durata effettiva di ogni fase e' misurata attorno a pool.starmap, quindi comprende l'avvio dei processi del pool, che su Windows sono creati da zero e nell'eseguibile congelato si riavviano ciascuno dal bootloader di PyInstaller. Le operazioni invece sono contate solo nei dieci secondi del lavoro. La prima fase risulta diluita: nel file del 28 dicembre 2025 dura 10,089 secondi contro i 10,003 della terza, cioe' lo 0,9 per cento in meno di velocita' dichiarata, e con trentadue processi congelati la differenza sara' maggiore. I risultati dipendono inoltre dalla versione dell'interprete, perche' misurano Python e non solo il processore: la classifica mescola macchine provate con il 3.11 e con il 3.13 senza dirlo, e non dice nemmeno quale processore abbia ogni macchina.
+Impatto per l'utente: confronti fra macchine e fra prove della stessa macchina falsati di qualche punto percentuale, che e' l'ordine di grandezza delle differenze che Gabriele vuole misurare, per esempio la memoria a 4200 contro 4800.
+Correzione proposta: ogni processo restituisce le operazioni e la propria durata misurata, e la velocita' e' la somma dei rapporti; la classifica dice processore e versione di Python di ogni voce. Rientra nell'arricchimento del punto 7.
+Rilievo 22
+Gravita': medio
+Categoria: ottimizzazione
+File e riga: progetto intero
+Problema: non esiste una cartella tests ne' un requirements.txt. La logica piu' esposta a regressioni, cioe' il cronometro con le pause, la conversione dei tempi in parole, l'interpretazione delle durate e degli orari, il formato dei numeri grandi, la validazione delle classifiche, e' tutta pura e facile da provare, e le correzioni di questa revisione la toccano tutta.
+Impatto per l'utente: ogni correzione futura si prova a mano o non si prova.
+Correzione proposta: una cartella tests con pytest, come gabryscola, scritta insieme alle correzioni cosi' che ognuna abbia la sua prova.
+3.4 Rilievi bassi
+Rilievo 23
+Gravita': basso
+Categoria: logica
+File e riga: meditimer.py:233-237
+Problema: nel ramo dei peta, formatta_numero_grande costruisce la stringa con il separatore delle migliaia e poi sostituisce tutte le virgole con punti, ottenendo 1.234.57 Pop/s invece di 1.234,57. Inoltre l'arrotondamento a tre cifre avviene dopo il confronto con mille, quindi 999,6 diventa 1000 op/s invece di 1 Kop/s. Verificato oggi in entrambi i casi.
+Impatto per l'utente: il primo caso oggi e' irraggiungibile; il secondo capita di rado.
+Correzione proposta: arrotondare prima di confrontare e usare la stessa forma in tutti i rami.
+Rilievo 24
+Gravita': basso
+Categoria: logica
+File e riga: meditimer.py:619-620
+Problema: quando due giri hanno lo stesso tempo, il numero del giro piu' veloce e quello del piu' lento indicano sempre il primo dei pari merito, senza dirlo.
+Impatto per l'utente: minimo.
+Correzione proposta: dire quanti sono i pari merito quando ce n'e' piu' di uno.
+Rilievo 25
+Gravita': basso
+Categoria: regole generali
+File e riga: meditimer.py:172, 405, 409, 413, 464, 474 e 525
+Problema: molte stringhe informative superano i quaranta caratteri chiesti per il display braille e nessuna e' spezzata in blocchi. La riga della classifica ne misura cento, la nota della riga 413 centotrenta, l'annuncio del timer alla riga 525 oltre novanta.
+Impatto per l'utente: scorrimenti laterali sul display braille.
+Correzione proposta: spezzare in blocchi di circa quaranta caratteri, cosa che viene quasi da se' accogliendo il rilievo 6.
+Rilievo 26
+Gravita': basso
+Categoria: ottimizzazione
+File e riga: meditimer.py, vari punti
+Problema: nomi in due lingue, Stopwatch, record_lap, get_elapsed_time, parse_time_input, timer_worker accanto a mostra_classifiche e salva_report; costanti magiche sparse, dieci secondi per fase, trenta voci in classifica, due secondi e mezzo e cinque fra i campanelli, tre serie da cinque; DURATA_PER_TEST scritta come costante ma locale a una funzione; commenti da diario di lavoro come NUOVA LOGICA e la magia del daemon; il file delle classifiche letto due volte nello stesso flusso, righe 266 e 315; la data convertita in stringa iso e riletta con fromisoformat solo per comporre un nome di file, riga 299; trenta righe vuote che contengono spazi.
+Impatto per l'utente: nessuno diretto; costa a chi manutiene.
+Correzione proposta: nomi in italiano, costanti a livello di modulo, commenti che spiegano il perche' e non la cronaca, una sola lettura del file.
+Rilievo 27
+Gravita': basso
+Categoria: ottimizzazione
+File e riga: meditimer.py, struttura
+Problema: un solo file tiene insieme il ciclo dei tasti, il cronometro, i timer e le sveglie, il banco di prova, la lettura e scrittura delle classifiche. Con l'arricchimento del punto 7 supererebbe le mille righe.
+Impatto per l'utente: nessuno diretto.
+Correzione proposta: dividere in moduli con una responsabilita' ciascuno: cronometro.py, sveglie.py, banco_prova.py con misure e scheda della macchina, classifiche.py per il file, version.py, e meditimer.py con il solo ciclo principale. PyInstaller li segue senza bisogno di altro.
+4. Riepilogo
+Rilievi totali: 27. Critici 1, alti 7, medi 14, bassi 5.
+Cio' che e' solido: stringa_tempo_descrittiva dice il tempo a parole, salta le parti che valgono zero, accorda singolare e plurale e mette la congiunzione prima dell'ultima parte: e' il modo giusto di dire un tempo a chi ascolta. Il banco di prova multi core e' scritto correttamente nella sostanza: pool di processi con il numero di processori rilevato, tempo effettivo invece di quello nominale, somma delle operazioni di tutti i processi e freeze_support prima di main, che e' cio' che serve perche' il multiprocessing non si moltiplichi all'infinito dentro un eseguibile PyInstaller. I thread demoni per timer e sveglia sono la scelta giusta. La gestione delle pause nel tempo complessivo e' corretta, ed e' un peccato che non arrivi ai giri. Lo stile dei messaggi, che vanno a capo prima e non dopo, lascia il cursore sull'ultima riga scritta ed e' esattamente cio' che serve al display braille: va conservato. Il ciclo principale interroga key con un'attesa di un centesimo di secondo: dalla V7.0.0 le tabelle dei tasti sono costanti di modulo e, su Windows, key dorme comunque dieci millisecondi fra un controllo e l'altro anche con attesa illimitata, quindi il costo e' trascurabile e il rilievo del rapporto precedente decade.
+Quadro d'insieme: meditimer fa quattro mestieri, cronometro, timer, sveglia e banco di prova, e li fa tutti abbastanza bene. I difetti si concentrano in tre zone. La prima sono i numeri del cronometro, dove i rilievi 1 e 2 insieme rendono poco affidabile proprio cio' che il programma promette di misurare. La seconda e' la presentazione, dove tabelle e trattini rendono faticose classifiche e statistiche. La terza e' cio' che si salva, che oggi dipende dalla directory di lavoro e si puo' perdere per un Ctrl piu' C.
+5. Ordine di lavorazione proposto
+Primo blocco, la misura: rilievi 1, 2, 12, 19, 23 e 24, con le prove automatiche del rilievo 22 scritte insieme.
+Secondo blocco, la sicurezza di cio' che si salva: rilievi 3, 4, 5 e 8.
+Terzo blocco, l'accessibilita' e la voce: rilievi 6, 9, 25 e 14 per dgt, enter_escape e Acusticator.
+Quarto blocco, timer e sveglie: rilievi 7 e 11.
+Quinto blocco, il banco di prova e il suo arricchimento: rilievi 17 e 21 e il punto 7.
+Sesto blocco, la forma e le regole: rilievi 10, 13, 15, 16, 18, 20, 26 e 27, con la struttura a moduli fatta all'inizio del lavoro, non alla fine, cosi' che ogni correzione nasca gia' nel modulo giusto.
+Versione risultante: 3.0.0, perche' il refactoring e' profondo, il formato del file delle classifiche cambia e i comandi crescono.
+6. Domande per Gabriele prima di cominciare
+Domanda 1, rilievo 2: che cosa deve dire la percentuale del giro? Le scelte sono la variazione rispetto al giro precedente, oppure rispetto alla media dei giri precedenti, oppure entrambe. Proposta: rispetto al giro precedente, detta a parole, per esempio il tre per cento piu' veloce del giro prima; la media resta nelle statistiche del tasto f.
+Domanda 2, rilievo 10: che cosa deve fare z? Le scelte sono azzerare soltanto, chiedendo conferma quando ci sono giri o tempo da perdere; oppure salvare e azzerare, dichiarandolo nel menu; oppure chiedere ogni volta se salvare prima di azzerare. Proposta: la prima, cioe' z azzera dopo conferma e q resta l'unico che salva.
+Domanda 3, rilievo 11: che cosa significa un numero solo nella sveglia? Le scelte sono il minuto dell'ora corrente come oggi, ma detto nel prompt; oppure il primo orario futuro con quel minuto, cosi' 5 alle otto e trentatre vuol dire le nove e cinque; oppure rifiutare il numero solo e chiedere almeno ore e minuti. Proposta: la seconda.
+Domanda 4, rilievo 16: benchmark_results.json resta versionato? Contiene i nomi delle tue macchine e viaggia con il repository, il che e' comodo per portare la classifica da una macchina all'altra. Proposta: resta versionato, perche' la classifica fra le tue macchine e' proprio cio' che il file serve a costruire; se preferisci tenere i nomi fuori da GitHub, lo escludo e resta locale.
+Domanda 5, punto 7: quali parametri aggiungere al banco di prova e con quali scelte, vedi sotto.
+Domanda 6, attribuzione: propongo Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode) in tutte le intestazioni, da correggere se il modello o la modalita' di questa sessione sono altri.
+7. Arricchimento del banco di prova
+Il banco di prova oggi misura tre velocita' su tutti i processori logici insieme e conclude con la frase che RAM e GPU non si possono misurare con le sole librerie standard. La parte sulla GPU resta vera. Il resto si puo' fare, e la proposta e' questa, in ordine di utilita'.
+7.1 La scheda della macchina, salvata con ogni prova e mostrata nella classifica: nome e modello del processore, core fisici e processori logici, memoria totale, sistema operativo, versione di Python, alimentazione da rete o da batteria. Su Windows nome e frequenza del processore si leggono dal registro con la sola libreria standard; core fisici, memoria e batteria su ogni sistema li da' psutil, che e' gia' installato su questa macchina ed e' piccolo. Proposta: psutil come dipendenza facoltativa, importata dentro un try, senza la quale la scheda ha meno voci ma tutto il resto funziona.
+7.2 La velocita' di un processore solo: le stesse tre prove eseguite in un processo unico. Ne escono la velocita' di un core e il fattore di scala fra tutti i core e uno, che dice quanto la macchina guadagna dal parallelismo: e' il numero che distingue il boost a un thread dal limite di potenza su tutti, cioe' proprio cio' che si vuole capire per il BIOS.
+7.3 La banda della memoria: copia ripetuta di blocchi grandi, da 64 megabyte in su, per qualche secondo, con il risultato in gigabyte al secondo. E' la misura che mostra la differenza fra la RAM a 4200 e a 4800 e non ha bisogno di nessuna libreria. Per misurare la memoria e non la cache del processore i blocchi devono essere molto piu' grandi della cache, e la prova va fatta su un processo solo e poi su tutti, perche' con tutti i core insieme si misura la banda totale del controller.
+7.4 Il disco: scrittura sequenziale di un file temporaneo nella cartella del programma, con la sincronizzazione forzata cosi' che si misuri il disco e non la cache di scrittura, poi rilettura, poi cancellazione. Un file da 256 megabyte basta e su un disco a stato solido non lascia segni. La rilettura subito dopo la scrittura pesca dalla cache del sistema: su Windows si puo' aggirare aprendo il file senza cache con la libreria standard e ctypes, altrove si dichiara che la lettura e' dalla cache. Da confermare se lo vuoi, perche' scrive sul disco.
+7.5 Le durate: oggi trenta secondi. Con tutte le prove proposte si arriva a circa settanta secondi: tre fasi da dieci su tutti i core, tre fasi da cinque su un core, cinque secondi di memoria per due, quindici di disco. Proposta: una durata unica scelta prima di partire fra breve, normale e lunga, che scala tutte le fasi.
+7.6 La cronologia: oggi ogni macchina ha una voce sola nel file e la prova nuova sovrascrive la vecchia dopo conferma. Con una cronologia per macchina la classifica mostra la prova migliore e quella piu' recente, e il confronto dice come e' cambiata la macchina nel tempo, per esempio prima e dopo l'aggiornamento del BIOS. Il file cambia formato: le voci attuali vengono migrate al caricamento, rilievo 5.
+7.7 I sensori: docs/bios/misura_carico.py sa gia' leggere potenza, temperatura e frequenze da HWiNFO, quando e' in esecuzione con la memoria condivisa attiva. Si potrebbe innestare nel banco di prova come lettura facoltativa durante le fasi, cosi' che il report dica a che potenza e temperatura ha lavorato il processore. Vale solo su Windows con HWiNFO acceso, e sarebbe un modulo a parte, chiuso in un try. Da decidere se rientra in questa revisione o resta uno strumento di docs.
+8. Prove che richiedono Gabriele
+Nessuna prova e' stata messa in collaudo.txt in questa fase, perche' il programma non e' stato modificato. A correzioni fatte serviranno: una sessione di cronometraggio con pause vere e giri, l'ascolto dell'allarme e del suo silenziamento, la lettura delle classifiche e del confronto con NVDA e con il display braille, un banco di prova completo su questa macchina e uno sul portatile a batteria, e la prova dell'eseguibile compilato in un file unico con il banco di prova, che e' il caso in cui i processi del pool si riavviano dal bootloader.
