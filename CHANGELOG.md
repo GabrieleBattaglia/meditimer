@@ -5,6 +5,8 @@ Il changelog nasce con la versione 3.0.0. Per le versioni precedenti il resocont
 
 ## [3.0.0] - 2026-09-11
 
+Pubblicata su GitHub il 2026-09-11 come release `v3.0.0`, con il solo archivio `meditimer.zip` in allegato. Issue 1 chiusa.
+
 Revisione 1 del refactoring generale del parco software. Il programma è stato riscritto in moduli, e la versione cambia di numero maggiore perché cambiano i comandi, i suoni, il banco di prova e il formato dell'archivio.
 
 ### Aggiunto
