@@ -1,0 +1,26 @@
+# Configurazione ruff di Meditimer.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode).
+line-length = 140
+
+[lint]
+select = ["E", "F", "W", "B", "SIM", "UP", "I", "C4", "RET", "BLE", "S", "RUF", "DTZ", "FURB"]
+ignore = [
+    # Righe lunghe: quasi tutti i messaggi all'utente stanno su una riga
+    # sola, e spezzarli renderebbe piu' difficile ritrovarli nel codice.
+    "E501",
+    # Lo stile di Gabriele ammette l'istruzione breve sulla stessa riga.
+    "E701",
+    "E702",
+    "E741",
+    # Date e orari sono di proposito quelli locali, senza fuso: l'ora della
+    # sveglia, la data nei report e nelle classifiche sono quelle
+    # dell'orologio e del calendario di chi usa il programma.
+    "DTZ001",
+    "DTZ005",
+    "DTZ011",
+]
+
+[lint.per-file-ignores]
+# Nelle prove l'assert e' lo strumento di pytest, non un controllo da
+# lasciare in produzione.
+"tests/*.py" = ["S101"]

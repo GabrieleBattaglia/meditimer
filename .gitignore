@@ -1,5 +1,14 @@
-dist/
-built/
+# Meditimer, cosa resta fuori da git.
+# I prodotti della compilazione e l'archivio della release, che si pubblica su GitHub.
 __pycache__/
-*.txt
+build/
+dist/
 *.zip
+.pytest_cache/
+.ruff_cache/
+# I file che il programma produce usandolo: i report delle sessioni e dei banchi di prova
+# portano la data e il nome del computer di chi li ha fatti. Il file delle classifiche
+# invece viaggia con il repository, per portare la classifica da una macchina all'altra.
+Meditimer-*.txt
+benchmark-*.txt
+*.tmp

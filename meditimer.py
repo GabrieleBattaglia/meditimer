@@ -1,715 +1,473 @@
-# Meditimer L'affetta tempo
-# Data concepimento: 05/11/2015 11:51 by Gabriele Battaglia
-# Porting Python 3.6: 23/11/2017.
-# Inizio restyling 10/02/2022
-# Restyling con ChatGPT4o il 16 luglio 2024
-# Aggiunta Classifiche Benchmark by Partner di Programmazione il 01/10/2025
+# Meditimer, l'affetta tempo: cronometro con giri, timer, sveglia e banco di prova della macchina.
+# Studiato per chi usa uno screen reader e per il display braille.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode).
+# Concepito il 05/11/2015, portato a Python 3 nel 2017, rifatto nel 2022 e nel
+# 2024, con le classifiche del banco di prova dal 01/10/2025.
+# 11/09/2026: revisione 1 del refactoring generale. Il file unico si divide in
+# moduli, i giri non contano piu' le pause, timer e sveglie si elencano, si
+# annullano e si zittiscono, ogni tasto ha un suono, il banco di prova misura
+# anche un processore solo, la memoria e il disco, e l'archivio delle prove
+# tiene la cronologia di ogni macchina.
 
-import time
-import datetime
-import sys
-import os
-import socket
-import math
+"""Meditimer, il programma principale.
+
+Qui stanno il ciclo dei tasti e le frasi dette all'utente: il cronometro,
+gli avvisi, il banco di prova e l'archivio vivono nei loro moduli e non
+stampano. Ogni messaggio va a capo prima e non dopo, cosi' il cursore, e
+con lui il display braille, resta sull'ultima cosa scritta; il prompt
+comincia e finisce con un ritorno carrello, che riporta il cursore al suo
+inizio. I prompt che aspettano un tasto solo passano da key, quelli che
+aspettano una riga da dgt, entrambi di GBUtils.
+"""
+
+import contextlib
 import multiprocessing
-import json
-import threading
+import sys
+import time
+from datetime import datetime
 
-# Aggiunta percorso per importare GBUtils
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'GBUtils')))
-try:
-    from GBUtils import key as gb_key
-except ImportError:
-    print("Errore: Impossibile importare GBUtils.")
-    sys.exit(1)
-VERSIONE = "2.9.1 del 15 maggio 2026"
-MNMENU={'a':'per avviare/pausa',
-  's':"Per registrare l'ultimo giro e fermare",
-  'z':'Per azzerare',
-  'f':'Per statistiche sui giri',
-  ' ':'Per registrare un giro (barra spazio)',
-  'd':'Per mostrare la data',
-  'o':"Per mostrare l'ora",
-  'x':'Per impostare un timer',
-  'w':'Per impostare una sveglia',
-  'c':'Per tempo trascorso',
-  'v':'Per tempo complessivo di esecuzione',
-  'b':'Per eseguire un test di velocità della macchina',
-  'n':'Per mostrare le classifiche dei benchmark',
-  'q':'Per uscire e salvare il report',
-  '?':'Per mostrare questo aiuto'}
+from GBUtils import dgt, gestisci_aggiornamento, key, manuale
 
-GIORNISETTIMANA = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
-MESIANNO = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"]
-TINIZIO = time.time()
-NOME_FILE_JSON = "benchmark_results.json" # Nome del file per i risultati del benchmark
+import banco_prova
+import classifiche
+import suoni
+from cronometro import Cronometro, righe_report
+from formati import data_italiana, ora_breve, stringa_tempo_descrittiva
+from percorsi import cartella_programma, percorso_dati, percorso_risorsa
+from sveglie import GUIDA_DURATA, GUIDA_ORARIO, Registro, interpreta_durata, interpreta_orario
+from version import AUTHOR, DATE, VERSION
 
-def stringa_tempo_descrittiva(t):
-    """
-    Riceve un tempo in secondi e rende una stringa descrittiva
-    mostrando solo le parti non nulle (es. "1 minuto, 15 secondi e 321 millisecondi").
-    """
-    millis = int((t - int(t)) * 1000)
-    seconds = int(t) % 60
-    minutes = (int(t) // 60) % 60
-    hours = (int(t) // 3600)
+APP_NAME = "meditimer"
+API_RELEASE = "https://api.github.com/repos/GabrieleBattaglia/meditimer/releases/latest"
+MANUALE = "manuale.txt"
+PROMPT = "\rMenu principale, ? per i comandi > \r"
+PROMPT_PROFILO = "\rDurata del banco di prova: b breve, n normale, l lunga, invio per normale, escape per annullare. \r"
+PROFILI_TASTI = {"b": "breve", "n": "normale", "l": "lunga", "\r": "normale"}
+# La suoneria: serie di rintocchi con le pause, finche' un tasto non la zittisce.
+SERIE_SUONERIA = 3
+RINTOCCHI_PER_SERIE = 5
+PAUSA_RINTOCCHI = 2.0
+PAUSA_SERIE = 4.0
+COMANDI = (
+    ("a", "avvia il cronometro, lo mette in pausa e lo riprende"),
+    ("spazio", "registra un giro"),
+    ("s", "registra l'ultimo giro e ferma il cronometro"),
+    ("f", "statistiche dei giri"),
+    ("c", "tempo trascorso dal cronometro"),
+    ("z", "salva il report e azzera il cronometro"),
+    ("x", "imposta un timer"),
+    ("w", "imposta una sveglia"),
+    ("l", "elenca timer e sveglie e ne annulla uno"),
+    ("d", "data di oggi"),
+    ("o", "ora"),
+    ("v", "da quanto tempo gira il programma"),
+    ("b", "banco di prova della macchina"),
+    ("n", "classifiche dei banchi di prova"),
+    ("m", "manuale"),
+    ("?", "questo elenco"),
+    ("q", "salva il report ed esce"),
+    ("un tasto qualsiasi", "zittisce la suoneria di un timer o di una sveglia"),
+)
+TINIZIO = time.monotonic()
 
-    parti = []
-    if hours > 0:
-        parti.append(f"{hours} {'ora' if hours == 1 else 'ore'}")
-    if minutes > 0:
-        parti.append(f"{minutes} {'minuto' if minutes == 1 else 'minuti'}")
-    if seconds > 0:
-        parti.append(f"{seconds} {'secondo' if seconds == 1 else 'secondi'}")
-    if millis > 0:
-        parti.append(f"{millis} {'millisecondo' if millis == 1 else 'millisecondi'}")
-    
-    if not parti:
-        return "0 secondi"
 
-    if len(parti) > 1:
-        return ", ".join(parti[:-1]) + " e " + parti[-1]
-    else:
-        return parti[0]
+def dire(testo):
+    """Una frase all'utente: a capo prima, non dopo, cosi' il cursore le resta sopra."""
+    print("\n" + testo, end="", flush=True)
 
-class Stopwatch:
+
+def dire_righe(righe):
+    for riga in righe:
+        dire(riga)
+
+
+def scrivi_righe(percorso, righe):
+    """Scrive le righe in un file di testo, una per riga. Solleva OSError."""
+    with open(percorso, "w", encoding="utf-8") as f:
+        f.write("\n".join(righe) + "\n")
+
+
+NOMI_TASTI = {
+    " ": "spazio",
+    "\r": "invio",
+    "\x1b": "escape",
+    "\t": "tab",
+    "\x08": "backspace",
+    "up": "freccia su",
+    "down": "freccia giù",
+    "left": "freccia sinistra",
+    "right": "freccia destra",
+    "home": "inizio",
+    "end": "fine",
+    "pageup": "pagina su",
+    "pagedown": "pagina giù",
+    "insert": "ins",
+    "delete": "canc",
+}
+
+
+def nome_tasto(tasto):
+    """Come chiamare un tasto quando non e' fra quelli previsti."""
+    if tasto in NOMI_TASTI:
+        return NOMI_TASTI[tasto]
+    if len(tasto) == 1 and not tasto.isprintable():
+        return f"con codice {ord(tasto)}"
+    return tasto
+
+
+class Sessione:
+    """Lo stato di una sessione di Meditimer e i comandi che lo cambiano."""
+
     def __init__(self):
-        self.reset()
+        self.crono = Cronometro()
+        self.registro = Registro(self._suoneria)
+        self._archivio_dati = None
+        self.comandi = {
+            "a": self.avvia_pausa,
+            " ": self.giro,
+            "s": self.ferma,
+            "f": self.statistiche,
+            "c": self.tempo_trascorso,
+            "z": self.azzera,
+            "x": self.timer,
+            "w": self.sveglia,
+            "l": self.elenco,
+            "d": self.data,
+            "o": self.ora,
+            "v": self.tempo_esecuzione,
+            "b": self.banco,
+            "n": self.classifiche,
+            "m": self.manuale,
+            "?": self.aiuto,
+        }
 
-    def reset(self):
-        self._start_time = 0.0
-        self._pause_time = 0.0
-        self._total_pause_time = 0.0
-        self._running = False
-        self._laps = []
-        self._lap_strings = []
-        print("\nCronometro azzerato!", end="", flush=True)
+    # --- Il dialogo -------------------------------------------------------
 
-    def start_pause(self):
-        if not self._running:
-            self._running = True
-            if self._start_time == 0.0:
-                self._start_time = time.time()
-                self._last_lap_time = self._start_time
-                print("\nCronometro avviato!", end="", flush=True)
-            else:
-                pause_duration = time.time() - self._pause_time
-                self._total_pause_time += pause_duration
-                print("\nCronometro ripreso!", end="", flush=True)
-        else:
-            self._running = False
-            self._pause_time = time.time()
-            print("\nCronometro in pausa!", end="", flush=True)
-
-    def stop(self):
-        if self._running:
-            self.start_pause()
-        print("\nCronometro fermato!", end="", flush=True)
-
-    def record_lap(self):
-        if not self._running:
-            return
-        now = time.time()
-        lap_time = now - self._last_lap_time
-        self._last_lap_time = now
-        
-        percentuale_str = ""
-        
-        if len(self._laps) >= 2:
-            min_lap_prev = min(self._laps)
-            max_lap_prev = max(self._laps)
-            lap_range_prev = max_lap_prev - min_lap_prev
-
-            if lap_range_prev == 0:
-                percentuale = ((min_lap_prev - lap_time) / min_lap_prev) * 100 if min_lap_prev > 0 else 0
-            else:
-                percentuale = (1 - ((lap_time - min_lap_prev) / lap_range_prev)) * 100
-            
-            percentuale_str = f" ({percentuale:+.2f}%)"
-
-        self._laps.append(lap_time)
-        
-        numero_giro = len(self._laps)
-        
-        output_str = f"Giro {numero_giro} registrato: {stringa_tempo_descrittiva(lap_time)}"
-        output_str += percentuale_str
-
-        if len(self._laps) > 1:
-            if lap_time == min(self._laps):
-                output_str += " (nuovo giro più veloce!)"
-            elif lap_time == max(self._laps):
-                output_str += " (nuovo giro più lento)"
-        
-        print("\n" + output_str, end="", flush=True)
-        
-        self._lap_strings.append(output_str)
-
-    def get_elapsed_time(self):
-        if self._start_time == 0.0:
-            return 0.0
-        if not self._running:
-            return self._pause_time - self._start_time - self._total_pause_time
-        return time.time() - self._start_time - self._total_pause_time
-
-    @property
-    def laps(self):
-        return self._laps
-
-    @property
-    def lap_strings(self):
-        return self._lap_strings
-
-    @property
-    def is_running(self):
-        return self._running
-def mostra_data_attuale():
-    now = datetime.datetime.now()
-    giorno_settimana = GIORNISETTIMANA[now.weekday()]
-    giorno = now.day
-    mese = MESIANNO[now.month - 1]
-    anno = now.year
-    giorno_dell_anno = now.timetuple().tm_yday
-    print(f"\nData: {giorno_settimana}, {giorno} {mese} {anno}, giorno {giorno_dell_anno} dell'anno",end="",flush=True)
-
-def mostra_ora_attuale():
-    print(f"\nOre: {datetime.datetime.now().strftime('%H:%M:%S')}",end="",flush=True)
-
-def tempo_complessivo_esecuzione():
-    return time.time() - TINIZIO
-
-def salva_report(stopwatch):
-    giri = stopwatch.laps
-    tempo_trascorso = stopwatch.get_elapsed_time()
-
-    # Se non ci sono dati da salvare, la funzione termina subito come prima.
-    if not giri and tempo_trascorso == 0:
-        print("\nNessun dato del cronometro da salvare.")
-        return
-
-    # --- NUOVA LOGICA: Chiede la nota all'utente ---
-    print("\nCosa hai cronometrato? Aggiungi una nota per il report.")
-    nota_utente = input("Inserisci la nota e premi Invio (lascia vuoto per 'Nessuna nota'): ")
-    if not nota_utente:
-        nota_utente = "Nessuna nota"
-
-    tempo_complessivo = tempo_complessivo_esecuzione()
-    filename = f"Meditimer-{datetime.datetime.now().strftime('%y%m%d-%H%M')}.txt"
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f"Report Meditimer versione {VERSIONE}\n")
-        f.write(f"Creato il {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        
-        giri_dettagliati = stopwatch.lap_strings
-        if giri_dettagliati:
-            f.write("\nGiri registrati:\n")
-            for riga_giro in giri_dettagliati:
-                f.write(f"  {riga_giro}\n")
-        
-        if giri:
-            f.write(f"\nGiro più veloce: {stringa_tempo_descrittiva(min(giri))}\n")
-            f.write(f"Giro più lento: {stringa_tempo_descrittiva(max(giri))}\n")
-            f.write(f"Tempo medio: {stringa_tempo_descrittiva(sum(giri) / len(giri))}\n")
-            if sum(giri) > 0:
-                f.write(f"\nTempo totale dei giri: {stringa_tempo_descrittiva(sum(giri))}\n")
-        
-        if tempo_trascorso > 0:
-            f.write(f"Tempo totale trascorso: {stringa_tempo_descrittiva(tempo_trascorso)}\n")
-        if tempo_complessivo > 0:
-            f.write(f"Tempo complessivo di esecuzione: {stringa_tempo_descrittiva(tempo_complessivo)}\n")
-
-        # --- NUOVA LOGICA: Aggiunge la nota al file ---
-        f.write("\n--- Nota dell'Utente ---\n")
-        f.write(f"{nota_utente}\n")
-    
-    print(f"\nReport salvato con successo nel file: {filename}")
-def mostra_aiuto():
-    print("\nComandi disponibili:")
-    for key, desc in MNMENU.items():
-        print(f"\t'{key}': {desc}")
-
-def formatta_numero_grande(n, suffisso='op/s'):
-    """Formatta un numero grande con prefissi metrici (K, M, G, T)."""
-    if n == 0:
-        return f"0 {suffisso}"
-    for unita in ['', 'K', 'M', 'G', 'T']:
-        if abs(n) < 1000.0:
-            return f"{float(f'{n:.3g}'):g} {unita}{suffisso}".replace(",", ".")
-        n /= 1000.0
-    return f"{n:,.2f} P{suffisso}".replace(",", ".")
-
-def benchmark_worker(durata, tipo_test):
-    operazioni = 0
-    start_time = time.perf_counter()
-    if tipo_test == 'int':
-        while (time.perf_counter() - start_time) < durata:
-            for i in range(1000):
-                risultato = (i * i * 2 + 15) // 3
-            operazioni += 1000
-    elif tipo_test == 'float':
-        while (time.perf_counter() - start_time) < durata:
-            for i in range(1000):
-                risultato_float = (float(i) * 3.14159) / 2.71828
-            operazioni += 1000
-    elif tipo_test == 'math':
-        while (time.perf_counter() - start_time) < durata:
-            for i in range(1, 1001):
-                risultato_mat = math.sqrt(i) + math.sin(i/100.0)
-            operazioni += 1000
-    return operazioni
-
-def salva_risultati_benchmark(risultati):
-    """
-    Salva i risultati del benchmark in un file JSON.
-    Se il file esiste, aggiorna i dati; altrimenti, ne crea uno nuovo.
-    """
-    try:
+    @staticmethod
+    def _chiedi(prompt, **parametri):
+        """Una riga di testo dall'utente; la fine dello standard input vale come risposta vuota."""
         try:
-            with open(NOME_FILE_JSON, 'r', encoding='utf-8') as f:
-                dati = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            dati = {} # Se il file non esiste o è vuoto, crea un dizionario vuoto
+            return dgt(prompt, **parametri)
+        except EOFError:
+            return parametri.get("default", "")
 
-        # Aggiorna o aggiunge il risultato del computer corrente
-        dati[risultati['nome_computer']] = risultati
+    def _archivio(self):
+        """L'archivio delle prove, letto una volta sola; l'avviso della lettura si dice subito."""
+        if self._archivio_dati is None:
+            self._archivio_dati, avviso = classifiche.carica(percorso_dati(classifiche.NOME_FILE))
+            if avviso:
+                dire(avviso)
+        return self._archivio_dati
 
-        with open(NOME_FILE_JSON, 'w', encoding='utf-8') as f:
-            json.dump(dati, f, indent=4)
-        print(f"\nRisultati del benchmark salvati in {NOME_FILE_JSON}")
+    # --- La suoneria ------------------------------------------------------
 
-    except IOError as e:
-        print(f"\nErrore durante il salvataggio del file JSON: {e}")
+    def _suoneria(self, avviso, silenzio):
+        """Suona un timer o una sveglia scaduti, dal thread dell'avviso, finche' non viene zittita."""
+        dire(avviso.conclusione(datetime.now()) + " Un tasto qualsiasi zittisce la suoneria.")
+        for serie in range(SERIE_SUONERIA):
+            for _ in range(RINTOCCHI_PER_SERIE):
+                if silenzio.is_set():
+                    return
+                if not suoni.suona("allarme", sync=True):
+                    print("\a", end="", flush=True)
+                if silenzio.wait(PAUSA_RINTOCCHI):
+                    return
+            if serie < SERIE_SUONERIA - 1 and silenzio.wait(PAUSA_SERIE):
+                return
 
-def _chiedi_nota_e_salva_tutto(risultati_json, report_testo):
-    """
-    Funzione helper che chiede la nota utente, aggiorna i dati e salva
-    sia il report .txt che il file .json.
-    """
-    # 1. Chiede la nota e aggiorna entrambi i set di dati
-    print("\nPuoi aggiungere una nota personale al report.")
-    nota_utente = input("Inserisci la nota e premi Invio (lascia vuoto per nessuna nota): ")
-    if nota_utente:
-        risultati_json["nota_utente"] = nota_utente
-        report_testo.append("\n--- Nota dell'Utente ---")
-        report_testo.append(nota_utente)
-    else:
-        risultati_json["nota_utente"] = ""
+    # --- Il cronometro ----------------------------------------------------
 
-    # 2. Salva il report di testo (.txt)
-    try:
-        nome_computer = risultati_json['nome_computer']
-        data_e_ora = datetime.datetime.fromisoformat(risultati_json['data_test'])
-        filename = f"benchmark-multicore-{nome_computer}-{data_e_ora.strftime('%Y%m%d-%H%M%S')}.txt"
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write("\n".join(report_testo))
-        print(f"\nReport di benchmark salvato con successo nel file: {filename}")
-    except IOError as e:
-        print(f"\nErrore: Impossibile salvare il file di report. Dettagli: {e}")
-
-    # 3. Salva i dati nella classifica (.json)
-    salva_risultati_benchmark(risultati_json)
-def confronta_e_salva_benchmark(nuovi_risultati, report_testo):
-    """
-    Controlla i risultati precedenti. Se esistono, chiede conferma prima di
-    chiamare la funzione helper per chiedere la nota e salvare tutto.
-    """
-    try:
-        with open(NOME_FILE_JSON, 'r', encoding='utf-8') as f:
-            dati_esistenti = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        dati_esistenti = {}
-
-    nome_computer = nuovi_risultati['nome_computer']
-
-    if nome_computer not in dati_esistenti:
-        print("\nNessun risultato precedente trovato per questa macchina.")
-        _chiedi_nota_e_salva_tutto(nuovi_risultati, report_testo)
-        return
-
-    vecchi_risultati = dati_esistenti[nome_computer]
-    print("\n--- Confronto con i Risultati Esistenti ---")
-    print(f"{'Tipo Test':<22} {'Valore Precedente':<18} {'Differenza (op/s)':<22} {'Variazione (%)'}")
-    print("-" * 85)
-
-    nomi_test = {
-        'int': 'Calcoli su Interi',
-        'float': 'Calcoli su Float',
-        'math': 'Funzioni Matematiche'
-    }
-
-    for tipo, nome_test in nomi_test.items():
-        vecchio_valore = vecchi_risultati.get('test', {}).get(tipo, {}).get('performance_totale', 0)
-        nuovo_valore = nuovi_risultati.get('test', {}).get(tipo, {}).get('performance_totale', 0)
-        if vecchio_valore == 0:
-            print(f"{nome_test:<22} {'N/D (vecchio valore nullo)':<18}")
-            continue
-        differenza = nuovo_valore - vecchio_valore
-        percentuale = (differenza / vecchio_valore) * 100 if vecchio_valore else 0
-        vecchio_formattato = formatta_numero_grande(vecchio_valore, 'op/s')
-        print(f"{nome_test:<22} {vecchio_formattato:<18} {differenza:+.2f} {percentuale:+.4f}%")
-
-    while True:
-        scelta = input("\nVuoi sovrascrivere i risultati esistenti con quelli nuovi? (s/n): ").lower()
-        if scelta == 's':
-            _chiedi_nota_e_salva_tutto(nuovi_risultati, report_testo)
-            break
-        elif scelta == 'n':
-            print("\nOperazione annullata. I risultati precedenti sono stati mantenuti.")
-            break
+    def avvia_pausa(self):
+        esito = self.crono.avvia_pausa()
+        if esito == "avviato":
+            dire("Cronometro avviato.")
+            suoni.suona("cronometro_avviato")
+        elif esito == "pausa":
+            dire(f"Cronometro in pausa a {stringa_tempo_descrittiva(self.crono.tempo_trascorso())}.")
+            suoni.suona("cronometro_pausa")
         else:
-            print("Input non valido. Per favore, inserisci 's' o 'n'.")
+            dire("Cronometro ripreso.")
+            suoni.suona("cronometro_ripreso")
+        return False
 
-def esegui_benchmark_multicore():
-    print("\n\n-- Inizio Test di Velocità Multi-Core (3 Fasi) --")
-    
-    DURATA_PER_TEST = 10.0
-    num_core = os.cpu_count() or 1
+    def giro(self):
+        giro = self.crono.giro()
+        if giro is None:
+            dire("Il cronometro non sta andando: premi a per avviarlo.")
+            suoni.suona("errore")
+            return False
+        suoni.suona_giro(giro.esito)
+        dire(giro.descrizione())
+        return False
 
-    print(f"Rilevati {num_core} core. Verranno eseguiti 3 test da {DURATA_PER_TEST} secondi ciascuno.")
-    print("Non usare il computer durante l'analisi per risultati più accurati.")
+    def ferma(self):
+        if not self.crono.in_corsa:
+            dire("Il cronometro non sta andando.")
+            suoni.suona("errore")
+            return False
+        giro = self.crono.giro()
+        self.crono.ferma()
+        dire(giro.descrizione())
+        dire(f"Cronometro fermato a {stringa_tempo_descrittiva(self.crono.tempo_trascorso())}.")
+        suoni.suona("cronometro_fermato")
+        return False
 
-    nome_computer = socket.gethostname()
-    data_e_ora = datetime.datetime.now()
-    info_python = sys.version
+    def statistiche(self):
+        righe = self.crono.righe_statistiche()
+        suoni.suona("statistiche" if len(righe) > 1 else "errore")
+        dire_righe(righe)
+        return len(righe) > 1
 
-    report_testo = ["--- Report Test di Velocità Multi-Core (3 Fasi) ---"]
-    report_testo.append(f"Nome Computer: {nome_computer}")
-    report_testo.append(f"Data e Ora: {data_e_ora.strftime('%Y-%m-%d %H:%M:%S')}")
-    report_testo.append(f"Versione Python: {info_python.splitlines()[0]}")
+    def tempo_trascorso(self):
+        if not self.crono.avviato:
+            dire("Il cronometro non è mai partito: premi a per avviarlo.")
+            suoni.suona("errore")
+            return False
+        stato = "" if self.crono.in_corsa else ", in pausa"
+        dire(f"Tempo trascorso: {stringa_tempo_descrittiva(self.crono.tempo_trascorso())}{stato}.")
+        suoni.suona("tempo_trascorso")
+        return False
 
-    risultati_json = {
-        "nome_computer": nome_computer,
-        "data_test": data_e_ora.isoformat(),
-        "info_python": info_python.splitlines()[0],
-        "num_core": num_core,
-        "test": {}
-    }
+    def azzera(self):
+        if self.crono.in_corsa:
+            dire("Metti in pausa il cronometro prima di azzerarlo, con a oppure s.")
+            suoni.suona("errore")
+            return False
+        chiesto = self.salva_report()
+        self.crono.azzera()
+        dire("Cronometro azzerato.")
+        suoni.suona("cronometro_azzerato")
+        return chiesto
 
-    tipi_di_test = [
-        ('Calcoli su Interi', 'int'),
-        ('Calcoli su Float', 'float'),
-        ('Funzioni Matematiche', 'math')
-    ]
+    def salva_report(self):
+        """Scrive il report della sessione, se c'e' qualcosa da scrivere. Vero se ha chiesto la nota."""
+        if not self.crono.avviato and not self.crono.giri:
+            return False
+        nota = self._chiedi("\nNota per il report del cronometro, invio per nessuna: ").strip()
+        adesso = datetime.now()
+        righe = righe_report(self.crono, VERSION, nota, time.monotonic() - TINIZIO, adesso)
+        nome = f"Meditimer-{adesso.strftime('%y%m%d-%H%M%S')}.txt"
+        percorso = percorso_dati(nome)
+        try:
+            scrivi_righe(percorso, righe)
+        except OSError as e:
+            dire(f"Report non salvato: {e}.")
+            suoni.suona("errore")
+            return True
+        dire(f"Report salvato in {nome}, nella cartella {cartella_programma()}.")
+        suoni.suona("report_salvato")
+        return True
 
-    with multiprocessing.Pool(processes=num_core) as pool:
-        for i, (nome_test, tipo) in enumerate(tipi_di_test):
-            print(f"\n-- Fase {i+1}/3: {nome_test}... --")
-            start_time = time.perf_counter()
-            args = [(DURATA_PER_TEST, tipo)] * num_core
-            risultati_per_core = pool.starmap(benchmark_worker, args)
-            end_time = time.perf_counter()
-            tempo_effettivo = end_time - start_time
-            report_testo.append("-" * 40)
-            report_testo.append(f"RISULTATI FASE: {nome_test}")
-            report_testo.append(f"Durata effettiva: {tempo_effettivo:.4f} secondi")
-            totale_operazioni = sum(risultati_per_core)
-            performance_totale = totale_operazioni / tempo_effettivo
-            report_testo.append(f"  Performance Totale: {formatta_numero_grande(performance_totale, 'op/s')} ({performance_totale:,.0f} op/s)")
-            report_testo.append("  Performance per Core:")
-            for core_idx, res_core in enumerate(risultati_per_core):
-                perf_core = res_core / tempo_effettivo
-                report_testo.append(f"    Core {core_idx+1:<2}: {formatta_numero_grande(perf_core, 'op/s')} ({perf_core:,.0f} op/s)")
-            risultati_json["test"][tipo] = { "nome_test": nome_test, "performance_totale": performance_totale }
+    # --- Timer e sveglie --------------------------------------------------
 
-    report_testo.append("-" * 40)
-    report_testo.append("Nota: RAM e GPU non possono essere misurate con precisione usando solo librerie standard di Python.")
-    
-    report_completo = "\n".join(report_testo)
-    print("\n" + report_completo)
+    def timer(self):
+        testo = self._chiedi(f"\nDurata del timer, {GUIDA_DURATA}, invio per annullare: ")
+        if not testo.strip():
+            dire("Nessun timer impostato.")
+            suoni.suona("annullato")
+            return True
+        secondi = interpreta_durata(testo)
+        if secondi is None:
+            dire(f"Durata non valida. Si scrive come {GUIDA_DURATA}, per esempio 90 oppure 2:30.")
+            suoni.suona("errore")
+            return True
+        avviso = self.registro.aggiungi_timer(secondi)
+        dire(avviso.annuncio(datetime.now()))
+        suoni.suona("timer_impostato")
+        return True
 
-    # La richiesta della nota e il salvataggio dei file sono stati spostati.
-    # Ora passiamo entrambi i set di dati alla funzione di confronto.
-    confronta_e_salva_benchmark(risultati_json, report_testo)
+    def sveglia(self):
+        testo = self._chiedi("\nOrario della sveglia, per esempio 13:02, 13, 5 oppure +5, invio per annullare: ")
+        if not testo.strip():
+            dire("Nessuna sveglia impostata.")
+            suoni.suona("annullato")
+            return True
+        adesso = datetime.now()
+        scadenza = interpreta_orario(testo, adesso)
+        if scadenza is None:
+            dire(f"Orario non valido. Si scrive cosi': {GUIDA_ORARIO}.")
+            suoni.suona("errore")
+            return True
+        avviso = self.registro.aggiungi_sveglia(scadenza)
+        dire(avviso.annuncio(adesso))
+        suoni.suona("sveglia_impostata")
+        return True
 
-def mostra_classifiche():
-    """
-    Legge i dati dal file JSON e mostra le classifiche per ogni tipo di test.
-    """
-    try:
-        with open(NOME_FILE_JSON, 'r', encoding='utf-8') as f:
-            dati = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print("\nNessun dato di benchmark trovato. Esegui prima un test con 'b'.")
-        return
+    def elenco(self):
+        attivi = self.registro.attivi()
+        suoni.suona("elenco")
+        if not attivi:
+            dire("Nessun timer e nessuna sveglia in attesa.")
+            return False
+        adesso = datetime.now()
+        dire_righe([a.descrizione(adesso) for a in attivi])
+        massimo = max(a.numero for a in attivi)
+        numero = self._chiedi("\nNumero da annullare, invio per nessuno: ", kind="i", imin=0, imax=massimo, default=0)
+        if not numero:
+            return True
+        avviso = self.registro.annulla(numero)
+        if avviso is None:
+            dire(f"Nessun timer o sveglia con il numero {numero} in attesa.")
+            suoni.suona("errore")
+            return True
+        dire(f"{'Timer' if avviso.tipo == 'timer' else 'Sveglia'} {avviso.numero} annullato.")
+        suoni.suona("annullato")
+        return True
 
-    print("\n--- Classifiche Benchmark ---")
-    
-    tipi_di_test = ['int', 'float', 'math']
-    nomi_test = {
-        'int': 'Calcoli su Interi',
-        'float': 'Calcoli su Float',
-        'math': 'Funzioni Matematiche'
-    }
+    # --- Data e tempi -----------------------------------------------------
 
-    for tipo in tipi_di_test:
-        print(f"\n--- Classifica: {nomi_test[tipo]} ---")
-        
-        # Crea una lista di computer che hanno eseguito questo test
-        classifica = []
-        for nome_computer, risultati in dati.items():
-            if 'test' in risultati and tipo in risultati['test']:
-                classifica.append({
-                    "nome_computer": nome_computer,
-                    "velocita": risultati['test'][tipo]['performance_totale'],
-                    "data": risultati['data_test'],
-                    "nota": risultati.get('nota_utente', '')
-                })
-        
-        # Ordina la classifica dalla velocità più alta alla più bassa
-        classifica_ordinata = sorted(classifica, key=lambda x: x['velocita'], reverse=True)
+    def data(self):
+        adesso = datetime.now()
+        dire(f"Oggi è {data_italiana(adesso)}, giorno {adesso.timetuple().tm_yday} dell'anno.")
+        suoni.suona("data")
+        return False
 
-        # Mostra i risultati
-        if not classifica_ordinata:
-            print("Nessun dato disponibile per questo tipo di test.")
-            continue
-        
-        print(f"{'Pos.':<5} {'Nome Computer':<25} {'Velocità (op/s)':<20} {'Data Test':<20} {'Nota':<30}")
-        print("-" * 100)
+    def ora(self):
+        dire(f"Sono le {ora_breve(datetime.now())}.")
+        suoni.suona("ora")
+        return False
 
-        for i, entry in enumerate(classifica_ordinata[:30]): # Mostra solo i primi 30
-            pos = f"{i+1}."
-            nome = entry['nome_computer'][:23]
-            velocita_str = formatta_numero_grande(entry['velocita'], 'op/s')
-            data_str = datetime.datetime.fromisoformat(entry['data']).strftime('%d/%m/%Y %H:%M')
-            nota_str = entry['nota'][:28]
-            
-            print(f"{pos:<5} {nome:<25} {velocita_str:<20} {data_str:<20} {nota_str:<30}")
+    def tempo_esecuzione(self):
+        dire(f"Il programma gira da {stringa_tempo_descrittiva(time.monotonic() - TINIZIO)}.")
+        suoni.suona("tempo_esecuzione")
+        return False
 
-def parse_time_input(input_str):
-    """
-    Interpreta una stringa come "h:m:s", "m:s" o "s" e la converte in secondi totali.
-    Restituisce il numero di secondi o None se l'input non è valido.
-    """
-    try:
-        parts = [int(p) for p in input_str.strip().split(':')]
-        parts.reverse()  # Lavoriamo da secondi a ore
-        
-        seconds = parts[0] if len(parts) > 0 else 0
-        minutes = parts[1] if len(parts) > 1 else 0
-        hours = parts[2] if len(parts) > 2 else 0
-        
-        if seconds < 0 or minutes < 0 or hours < 0:
-            return None
+    # --- Il banco di prova ------------------------------------------------
 
-        return hours * 3600 + minutes * 60 + seconds
-    except (ValueError, IndexError):
-        # Se la conversione a int fallisce o il formato non è corretto
-        return None
+    @staticmethod
+    def _escape_premuto():
+        """Vero se in coda c'e' un escape: si guarda fra una fase e l'altra del banco."""
+        with contextlib.suppress(EOFError):
+            return key(attesa=0, alla_scadenza=None) == "\x1b"
+        return False
 
-def suona_allarme():
-    """
-    Mostra un messaggio di conclusione con data/ora ed esegue la sequenza di beep.
-    """
-    now = datetime.datetime.now()
-    giorno_settimana = GIORNISETTIMANA[now.weekday()]
-    data_str = now.strftime('%d/%m/%Y')
-    ora_str = now.strftime('%H:%M:%S')
-
-    # Messaggio di conclusione che include data e ora
-    print("\n\n-- SVEGLIA/TIMER CONCLUSO --")
-    print(f"Alle ore {ora_str} di {giorno_settimana} {data_str}", flush=True)
-
-    # Sequenza di beep
-    pausa_tra_beep = 2.5
-    pausa_tra_serie = 5.0
-
-    for _ in range(3):
-        for _ in range(5):
-            print('\a', end='', flush=True)
-            time.sleep(pausa_tra_beep)
-        time.sleep(pausa_tra_serie)
-def timer_worker(durata_secondi):
-    """
-    Questa è la funzione che viene eseguita in un thread separato.
-    Attende per la durata specificata e poi suona l'allarme.
-    """
-    orario_fine = datetime.datetime.now() + datetime.timedelta(seconds=durata_secondi)
-    print(f"\nTimer impostato per {stringa_tempo_descrittiva(durata_secondi)}. L'allarme suonerà alle {orario_fine.strftime('%H:%M:%S')}.", end="", flush=True)
-    
-    # Il thread semplicemente "dorme" per il numero di secondi richiesto.
-    # Questo è molto efficiente e non consuma CPU.
-    time.sleep(durata_secondi)
-    
-    # Una volta terminata l'attesa, suona l'allarme.
-    suona_allarme()
-
-def imposta_timer():
-    """
-    Chiede all'utente la durata del timer, interpreta l'input
-    e avvia il thread del timer in background.
-    """
-    input_str = input("\nImposta durata (formati: ore:min:sec, min:sec, oppure solo sec): ")
-    if not input_str:
-        print("\nOperazione annullata.", end="", flush=True)
-        return
-
-    secondi_totali = parse_time_input(input_str)
-
-    if secondi_totali is None or secondi_totali <= 0:
-        print("\nFormato non valido o durata nulla. Riprova.", end="", flush=True)
-        return
-
-    # Creiamo il thread.
-    # 'target' è la funzione da eseguire (il nostro worker).
-    # 'args' sono gli argomenti da passare a quella funzione.
-    # 'daemon=True' è la magia: assicura che il thread si chiuda con il programma.
-    timer_thread = threading.Thread(target=timer_worker, args=(secondi_totali,), daemon=True)
-    
-    # Avviamo il thread, che inizierà a eseguire timer_worker in background.
-    timer_thread.start()
-# --- NUOVE FUNZIONI PER LA SVEGLIA ---
-
-def parse_time_alarm(input_str):
-    """
-    Interpreta un orario come "H:M:S" o "M:S" e calcola i secondi
-    mancanti da ora fino a quell'orario (per oggi o domani).
-    """
-    try:
-        parts = [int(p) for p in input_str.strip().split(':')]
-        now = datetime.datetime.now()
-
-        # Imposta i valori di default per l'orario di oggi
-        hour, minute, second = now.hour, now.minute, now.second
-
-        # Aggiorna in base all'input dell'utente
-        if len(parts) == 1: # Formato M
-             minute, second = parts[0], 0
-        elif len(parts) == 2: # Formato M:S
-            minute, second = parts[0], parts[1]
-        elif len(parts) == 3: # Formato H:M:S
-            hour, minute, second = parts[0], parts[1], parts[2]
+    def banco(self):
+        tasto = key(PROMPT_PROFILO)
+        print()
+        profilo = PROFILI_TASTI.get(tasto.lower() if len(tasto) == 1 else tasto)
+        if profilo is None:
+            dire("Banco di prova annullato.")
+            suoni.suona("annullato")
+            return True
+        secondi = banco_prova.secondi_stimati(profilo)
+        dire(f"Banco di prova, profilo {profilo}: nove fasi, circa {secondi} secondi.")
+        dire("Non usare il computer durante la prova. Fra una fase e l'altra escape annulla.")
+        suoni.suona("banco_avvio", sync=True)
+        prova = banco_prova.esegui(profilo, dire, suoni.suona, self._escape_premuto, cartella_programma(), VERSION)
+        if prova is None:
+            return True
+        suoni.suona("banco_concluso", sync=True)
+        righe = banco_prova.righe_riepilogo(prova)
+        dire_righe(righe)
+        dati = self._archivio()
+        nome = prova["scheda"]["nome_computer"]
+        classifiche.registra_prova(dati, nome, prova)
+        confronto, primato = classifiche.righe_confronto(dati, nome, prova)
+        dire_righe(confronto)
+        if primato:
+            suoni.suona("primato_macchina")
+        prova["nota"] = self._chiedi("\nNota per questa prova, invio per nessuna: ").strip()
+        percorso_archivio = percorso_dati(classifiche.NOME_FILE)
+        try:
+            classifiche.salva(percorso_archivio, dati)
+        except OSError as e:
+            dire(f"Archivio delle prove non salvato: {e}.")
+            suoni.suona("errore")
         else:
-            return None, None
-            
-        # Crea l'oggetto datetime per l'orario della sveglia di oggi
-        target_time = now.replace(hour=hour, minute=minute, second=second, microsecond=0)
+            dire(f"Prova salvata nell'archivio {classifiche.NOME_FILE}, nella cartella {cartella_programma()}.")
+            suoni.suona("banco_salvato")
+        nome_file = f"benchmark-{nome}-{datetime.fromisoformat(prova['data']).strftime('%Y%m%d-%H%M%S')}.txt"
+        try:
+            scrivi_righe(percorso_dati(nome_file), banco_prova.righe_riepilogo(prova) + banco_prova.righe_dettaglio(prova))
+        except OSError as e:
+            dire(f"Report della prova non salvato: {e}.")
+            suoni.suona("errore")
+        else:
+            dire(f"Report della prova salvato in {nome_file}.")
+        return True
 
-        # Se l'orario è già passato oggi, imposta la sveglia per domani
-        if target_time < now:
-            target_time += datetime.timedelta(days=1)
-            
-        # Calcola i secondi totali di attesa
-        wait_seconds = (target_time - now).total_seconds()
-        
-        return wait_seconds, target_time
+    def classifiche(self):
+        suoni.suona("classifiche")
+        dire_righe(classifiche.righe_classifiche(self._archivio()))
+        return True
 
-    except (ValueError, IndexError):
-        return None, None
+    # --- Aiuto ------------------------------------------------------------
 
-def alarm_worker(durata_secondi):
-    """
-    Funzione eseguita dal thread della sveglia. Attende e suona.
-    È quasi identica a timer_worker, ma la teniamo separata per chiarezza.
-    """
-    time.sleep(durata_secondi)
-    suona_allarme()
+    def manuale(self):
+        suoni.suona("manuale")
+        print()
+        try:
+            manuale(nf=percorso_risorsa(MANUALE), nome="Manuale di Meditimer")
+        except (OSError, ValueError, EOFError) as e:
+            dire(f"Manuale non disponibile: {e}.")
+            suoni.suona("errore")
+        return True
 
-def mostra_statistiche_giri(stopwatch):
-    """
-    Mostra una schermata di riepilogo con le statistiche principali dei giri registrati.
-    """
-    giri = stopwatch.laps
-    
-    # Controlla se ci sono abbastanza dati per le statistiche
-    if len(giri) < 2:
-        print("\nServono almeno 2 giri registrati per visualizzare le statistiche.", end="", flush=True)
-        return
+    @staticmethod
+    def aiuto():
+        dire_righe([f"{tasto}: {descrizione}." for tasto, descrizione in COMANDI])
+        return True
 
-    giro_veloce = min(giri)
-    giro_lento = max(giri)
-    # Troviamo l'indice del primo giro più veloce (+1 perché gli indici partono da 0)
-    numero_giro_veloce = giri.index(giro_veloce) + 1
-    numero_giro_lento = giri.index(giro_lento) + 1
-    media_giri = sum(giri) / len(giri)
-    differenza = giro_lento - giro_veloce
+    # --- Il ciclo ---------------------------------------------------------
 
-    print("\n\n--- Statistiche Giri ---")
-    print(f"  Giro più veloce:  (Giro n.{numero_giro_veloce}) {stringa_tempo_descrittiva(giro_veloce)}")
-    print(f"  Giro più lento:   (Giro n.{numero_giro_lento}) {stringa_tempo_descrittiva(giro_lento)}")
-    print(f"  Media giri:       {stringa_tempo_descrittiva(media_giri)}")
-    print(f"  Differenza:       {stringa_tempo_descrittiva(differenza)}")
-    print("------------------------")
+    def esegui(self, tasto):
+        """Esegue il comando del tasto. Vero se dopo va ristampato il prompt."""
+        if self.registro.in_suoneria():
+            self.registro.zittisci()
+            dire("Suoneria zittita.")
+            suoni.suona("allarme_zittito")
+            return False
+        if len(tasto) == 1:
+            tasto = tasto.lower()
+        comando = self.comandi.get(tasto)
+        if comando is None:
+            dire(f"Tasto {nome_tasto(tasto)} non previsto: premi ? per l'elenco dei comandi.")
+            suoni.suona("tasto_sconosciuto")
+            return False
+        return comando()
 
-def imposta_sveglia():
-    """
-    Chiede all'utente l'orario della sveglia e avvia il thread.
-    """
-    input_str = input("\nImposta orario sveglia (formati: H:M:S, M:S o M): ")
-    if not input_str:
-        print("\nOperazione annullata.", end="", flush=True)
-        return
+    def chiudi(self):
+        """L'uscita ordinata: report, avvisi annullati, saluto."""
+        chiesto = self.salva_report()
+        if not chiesto:
+            dire("Nessun dato del cronometro da salvare.")
+        self.registro.chiudi()
+        dire("Arrivederci.")
+        print()
+        suoni.suona("chiusura", sync=True)
+        suoni.chiudi()
 
-    secondi_attesa, orario_sveglia = parse_time_alarm(input_str)
-
-    if secondi_attesa is None or secondi_attesa <= 0:
-        print("\nFormato non valido. Riprova.", end="", flush=True)
-        return
-
-    print(f"\nSveglia impostata per le {orario_sveglia.strftime('%H:%M:%S del %d/%m/%Y')}.", end="", flush=True)
-    
-    # Creiamo e avviamo il thread della sveglia, esattamente come per il timer
-    alarm_thread = threading.Thread(target=alarm_worker, args=(secondi_attesa,), daemon=True)
-    alarm_thread.start()
 
 def main():
-    print(f"Meditimer - (L'AFFETTA TEMPO), versione {VERSIONE} by Gabriele Battaglia (IZ4APU).")
-    stopwatch = Stopwatch()
-    prompt_needed = True
-    while True:
-        if prompt_needed:
-            print("\n\nMenu principale ('?' per aiuto) > ", end="", flush=True)
-            prompt_needed = False
-        key = gb_key(attesa=0.01)
-        if key:
-            key = key.lower()
-            if key == 'a':
-                stopwatch.start_pause()
-            elif key == '?':
-                mostra_aiuto()
-            
-            elif key == 'w':
-                imposta_sveglia()
-                prompt_needed = True
-            elif key == 'x':
-                imposta_timer()
-                prompt_needed = True
-            elif key == 's':
-                stopwatch.record_lap()
-                stopwatch.stop()
-            elif key == 'z':
-                if not stopwatch.is_running:
-                    # Prima salva il report della sessione corrente (chiederà la nota)
-                    salva_report(stopwatch)
-                    # Poi azzera per la sessione successiva
-                    stopwatch.reset()
-                else:
-                    print("\nIl cronometro deve essere in pausa per azzerare.",end="",flush=True)
-            elif key == ' ':
-                stopwatch.record_lap()
-            elif key == 'f':
-                mostra_statistiche_giri(stopwatch)
-            elif key == 'd':
-                mostra_data_attuale()
-            elif key == 'o':
-                mostra_ora_attuale()
-            elif key == 'c':
-                tempo_trascorso = stopwatch.get_elapsed_time()
-                if tempo_trascorso > 0:
-                    print(f"\nTempo trascorso: {stringa_tempo_descrittiva(tempo_trascorso)}", end="", flush=True)
-            elif key == 'b':
-                esegui_benchmark_multicore()
-                prompt_needed = True
-            elif key == 'n': # Nuovo comando per le classifiche
-                mostra_classifiche()
-                prompt_needed = True
-            elif key == 'v':
-                tempo_esec = tempo_complessivo_esecuzione()
-                if tempo_esec > 0:
-                    print(f"\nTempo applicazione: {stringa_tempo_descrittiva(tempo_esec)}",end="",flush=True)
-            elif key == 'q':
-                salva_report(stopwatch)
-                print("\nArrivederci!")
+    print(f"Meditimer, l'affetta tempo, versione {VERSION} del {DATE}.")
+    print(f"Autori: {AUTHOR}.")
+    suoni.suona("avvio")
+    if gestisci_aggiornamento(APP_NAME, VERSION, API_RELEASE):
+        suoni.suona("chiusura", sync=True)
+        suoni.chiudi()
+        return 0
+    sessione = Sessione()
+    print("Premi ? per l'elenco dei comandi, q per uscire.")
+    prompt_da_stampare = True
+    try:
+        while True:
+            if prompt_da_stampare:
+                print("\n" + PROMPT, end="", flush=True)
+                prompt_da_stampare = False
+            tasto = key()
+            if tasto.lower() == "q" and not sessione.registro.in_suoneria():
                 break
+            prompt_da_stampare = sessione.esegui(tasto)
+    except KeyboardInterrupt:
+        dire("Interrotto: salvo il report ed esco.")
+    except EOFError:
+        dire("Nessuna console da cui leggere: esco.")
+    sessione.chiudi()
+    return 0
+
 
 if __name__ == "__main__":
-    # Assicurati che il programma non si blocchi quando eseguito come eseguibile compilato
-    multiprocessing.freeze_support() 
-    main()
+    # Senza questa chiamata i processi del banco di prova, nell'eseguibile
+    # compilato con PyInstaller, riavvierebbero il programma all'infinito.
+    multiprocessing.freeze_support()
+    sys.exit(main())

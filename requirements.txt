@@ -1,0 +1,39 @@
+# Meditimer, pacchetti necessari per eseguirlo dal codice sorgente.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode).
+#
+# Si installa tutto con:
+#     pip install -r requirements.txt
+#
+# ATTENZIONE: manca una dipendenza che pip non puo' scaricare, perche' non sta
+# su PyPI. E' GBUtils, la libreria condivisa dal parco software di IZ4APU, che
+# va clonata a parte e resa raggiungibile da Python:
+#     git clone https://github.com/GabrieleBattaglia/GBUtils.git
+# poi si mette la sua cartella in PYTHONPATH, oppure si copia GBUtils.py
+# accanto a meditimer.py. Accanto a GBUtils.py deve stare anche
+# Acu_Collection.json, che contiene tutti i suoni del programma.
+#
+# I limiti minimi qui sotto sono prudenti. Lo sviluppo avviene su Windows con
+# Python 3.14.5; serve almeno il 3.10 per le annotazioni usate da GBUtils.
+
+# Il calcolo dei campioni audio dentro GBUtils.
+numpy>=1.26
+
+# Il filtro passabanda dei rumori di Acusticator: il motore che sale di giri
+# del banco di prova e il fruscio del manuale sono rumori.
+scipy>=1.11
+
+# Il motore audio: Acusticator di GBUtils riproduce da qui i suoni.
+sounddevice>=0.5
+
+# Il controllo degli aggiornamenti all'avvio dell'eseguibile, usato da GBUtils.
+requests>=2.31
+
+# Facoltativo: la scheda della macchina nel banco di prova. Senza psutil
+# mancano i core fisici, la memoria e l'alimentazione su sistemi diversi da
+# Windows, e tutto il resto funziona lo stesso.
+psutil>=5.9
+
+# Il validatore, che va passato senza rilievi a ogni intervento sul codice,
+# e le prove automatiche della cartella tests.
+ruff>=0.6
+pytest>=8.0

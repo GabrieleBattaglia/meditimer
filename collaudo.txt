@@ -1,0 +1,38 @@
+Collaudo di Meditimer 3.0.0, revisione 1
+Ogni prova ha un titolo, cosa fare, cosa osservare e la riga Esito, da riempire con cio' che non va. Le prove superate si cancellano. Quando il file e' vuoto si cancella anche lui.
+Prova 1, i suoni
+Cosa fare: dalla cartella del progetto lancia python ascolta_suoni.py. Per ognuno dei trentasette suoni leggi la descrizione, premi invio per sentirlo, spazio per risentirlo, invio per passare al successivo.
+Cosa osservare: che i suoni siano brevi e non aggressivi, che i sette suoni dei giri si distinguano fra loro a orecchio senza leggere, che la suoneria si faccia notare senza essere fastidiosa, che nessun suono schiocchi all'inizio o alla fine.
+Esito:
+Prova 2, una sessione di cronometraggio con le pause
+Cosa fare: python meditimer.py, poi a, aspetta, spazio, spazio, a per la pausa, aspetta almeno dieci secondi, a per riprendere, spazio, s, f, c, z con una nota, q.
+Cosa osservare: che il giro dopo la pausa non contenga i dieci secondi della pausa; che ogni giro dica la variazione rispetto al precedente e dalla terza in poi anche rispetto alla media; che il suono del giro corrisponda alla frase, cioe' piu' veloce, piu' lento, nella media, primato; che le statistiche siano una frase per riga; che z chieda la nota e dica nome e cartella del report; che il report nella cartella del programma sia leggibile riga per riga senza righe vuote ne' trattini; che q con il cronometro azzerato dica che non c'e' niente da salvare.
+Esito:
+Prova 3, il display braille
+Cosa fare: durante la prova 2 tieni le dita sul display braille dopo ogni tasto.
+Cosa osservare: che il display resti sull'ultima frase scritta e non sul prompt; che il prompt Menu principale, quando viene ristampato, si legga dal suo inizio; che nelle classifiche e nel resoconto del banco di prova il secondo blocco di ogni riga parta dal quarantunesimo carattere.
+Esito:
+Prova 4, timer e sveglie
+Cosa fare: x con 90; x con 1:2:3:4; w con 5; w con 13; w con 13:02; w con +5; w con +2:08; w con ieri; l e annulla uno scrivendo il suo numero; l e invio per non annullare; x con 5 e aspetta la suoneria; premi un tasto qualsiasi mentre suona; poi q.
+Cosa osservare: che la conferma di ogni avviso dica l'orario giusto secondo la regola: 5 e' il minuto cinque dell'ora in corso o della prossima, 13 sono le tredici, 13:02 quell'orario, +5 fra cinque minuti; che 1:2:3:4 e ieri vengano rifiutati con il suono di errore e la frase che spiega il formato; che l elenchi con orario e tempo mancante; che la suoneria parta all'ora detta, che il tasto la zittisca subito e che quel tasto non faccia altro; che all'uscita gli avvisi in attesa vengano annullati senza suonare.
+Esito:
+Prova 5, il banco di prova su questa macchina, con e senza HWiNFO
+Cosa fare: b, poi n per il profilo normale, aspetta un minuto e mezzo senza toccare il computer, scrivi una nota. Poi avvia HWiNFO in Sensors-only con Shared Memory Support attivo e ripeti b.
+Cosa osservare: che ogni fase sia annunciata con il suono e riassunta con il risultato; che il resoconto riassuma i processi con minimo, massimo, media, dispersione e fuori norma invece di trentadue righe; che il fattore di scala e la copia in memoria abbiano senso; che il disco dica senza cache di sistema; che il confronto con le prove precedenti dica quanto e' cambiata la macchina rispetto alla 2.9.1 in archivio; che con HWiNFO acceso compaia la riga dei sensori con potenza, temperature e clock, e senza HWiNFO non compaia nulla al riguardo; che il file benchmark con il nome del computer sia nella cartella del programma e contenga anche le righe di dettaglio per processo.
+Esito:
+Prova 6, escape durante il banco di prova
+Cosa fare: b, b per il profilo breve, premi escape dopo il primo annuncio di fase.
+Cosa osservare: che alla fine della fase in corso il programma dica che la prova e' annullata e niente viene salvato, con il suono di motore che si spegne.
+Esito:
+Prova 7, il banco di prova sul mini PC a batteria
+Cosa fare: porta la cartella del programma sul GabryMiniPC-GPD con l'archivio benchmark_results.json, scollega l'alimentazione, b con il profilo breve, poi n.
+Cosa osservare: che la scheda della macchina dica batteria con la percentuale; che le classifiche mettano in fila le tre macchine con la prova migliore di ciascuna, e in fondo i conti sull'archivio.
+Esito:
+Prova 8, l'eseguibile compilato
+Cosa fare: dopo la compilazione con pyinstaller --noconfirm meditimer.spec, avvia dist\meditimer.exe da una cartella diversa da quella dell'eseguibile, per esempio dal desktop con un collegamento o da un prompt aperto altrove. Premi m, poi b con il profilo breve, poi q.
+Cosa osservare: che i suoni si sentano; che il manuale si apra; che il banco di prova parta senza aprire altre finestre e senza moltiplicare i processi; che i file nascano accanto all'eseguibile e non nella cartella da cui l'hai avviato; che all'avvio il controllo aggiornamenti dica di avere gia' l'ultima versione, o proponga la nuova.
+Esito:
+Prova 9, Ctrl piu' C
+Cosa fare: a, spazio, poi Ctrl piu' C.
+Cosa osservare: che il programma dica che salva il report ed esce, chieda la nota e scriva il file, senza traccia di errore.
+Esito:

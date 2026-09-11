@@ -1,6 +1,8 @@
 # Meditimer, utilita': prepara l'archivio per la distribuzione.
-# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Opus 5, modalita' auto).
-# 04/09/2026: primo chiamante, il mestiere sta in crea_archivio_release di GBUtils V104.
+# Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode).
+# 04/09/2026: primo chiamante, il mestiere sta in crea_archivio_release di GBUtils.
+# 11/09/2026: revisione 1, restano fuori anche la copia di riserva dell'archivio
+# delle prove e il file temporaneo del banco di prova del disco.
 
 """Comprime il risultato di PyInstaller in un solo archivio.
 
@@ -10,10 +12,10 @@ sola per tutti i progetti. Qui restano soltanto i nomi di Meditimer.
 Meditimer si compila in un file unico, quindi dentro dist c'e' soltanto
 l'eseguibile e tutto il resto viaggia dentro di lui.
 
-Si lasciano fuori i risultati dei benchmark e i rapporti delle sessioni,
-che nascono accanto all'eseguibile appena lo si prova: i primi portano il
-nome del computer di chi ha compilato, i secondi la data e l'ora delle sue
-meditazioni.
+Si lasciano fuori l'archivio dei banchi di prova con la sua copia di
+riserva e i report delle sessioni e delle prove, che nascono accanto
+all'eseguibile appena lo si prova: portano il nome del computer di chi ha
+compilato e la data e l'ora delle sue meditazioni.
 """
 
 import sys
@@ -22,8 +24,10 @@ from GBUtils import crea_archivio_release
 
 FUORI = [
     "benchmark_results.json",
-    "benchmark-multicore-*.txt",
+    "benchmark_results.json.bak",
+    "benchmark-*.txt",
     "meditimer-*.txt",
+    "banco_prova_disco.tmp",
 ]
 
 

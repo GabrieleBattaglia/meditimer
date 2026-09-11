@@ -1,0 +1,69 @@
+Manuale di Meditimer, l'affetta tempo
+Versione 3.0.0 del 11 settembre 2026
+Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode)
+1. Che cos'è
+Meditimer è un cronometro da riga di comando, pensato per chi usa uno screen reader e un display braille. Registra i giri, tiene timer e sveglie, misura quanto è veloce il computer su cui gira e conserva i risultati per confrontare fra loro le macchine. Ogni cosa si fa con un tasto solo, senza premere invio, e ogni tasto ha un suono suo: dopo un po' non serve nemmeno ascoltare le frasi.
+Ogni messaggio va a capo prima e non dopo, così il cursore, e con lui il display braille, resta sull'ultima cosa scritta. Le righe con più dati sono divise in blocchi di quaranta caratteri: il secondo blocco comincia sempre dal quarantunesimo carattere, che sul display braille è una lettura sola delle dita.
+2. I comandi
+a: avvia il cronometro; se sta andando lo mette in pausa; se è in pausa lo riprende.
+spazio: registra un giro.
+s: registra l'ultimo giro e ferma il cronometro, che poi si può riprendere con a.
+f: statistiche dei giri.
+c: tempo trascorso dal cronometro.
+z: salva il report della sessione e azzera il cronometro. Funziona solo a cronometro fermo.
+x: imposta un timer.
+w: imposta una sveglia.
+l: elenca timer e sveglie in attesa, e permette di annullarne uno.
+d: la data di oggi, con il giorno dell'anno.
+o: l'ora.
+v: da quanto tempo gira il programma.
+b: banco di prova della macchina.
+n: classifiche dei banchi di prova.
+m: questo manuale, una pagina alla volta.
+?: l'elenco dei comandi.
+q: salva il report della sessione, se c'è qualcosa da salvare, ed esce.
+Un tasto qualsiasi, mentre suona un timer o una sveglia, zittisce la suoneria senza fare altro.
+Ctrl più C esce come q, salvando il report.
+Un tasto non previsto viene detto a parole, con il suo suono, e non fa niente.
+3. Il cronometro e i giri
+Il cronometro parte con a. Ogni pressione della barra spaziatrice chiude un giro, cioè misura il tempo passato dal giro precedente, o dall'avvio per il primo. Le pause non entrano nei giri: se metti in pausa a metà di un giro e riprendi dopo un'ora, il giro conta solo il tempo in cui il cronometro andava. Il tempo trascorso, che chiedi con c, è la somma dei giri più il pezzo in corso.
+Ogni giro viene detto con una frase, per esempio: Giro 3: 1 minuto e 2 secondi, 3,1% più veloce del precedente, 1,2% più lento della media. Le due percentuali dicono quanto il giro è cambiato rispetto al giro prima e rispetto alla media dei giri fatti fino a quel momento, escluso lui. Il secondo giro ha solo il confronto con il primo. Dal terzo giro in poi, quando il giro è il più veloce di tutti o il più lento di tutti, la frase lo dice.
+Il suono del giro dice la stessa cosa in un decimo di secondo. Un tic solo è il primo giro. Due tic che salgono: più veloce del precedente. Due tic che scendono: più lento del precedente. Due tic uguali sulla stessa nota: nella media, cioè entro il tre per cento dalla media dei giri precedenti. Tre tic uguali e fitti: uguale al precedente. Un arpeggio brillante che sale: nuovo giro più veloce di tutti. Quattro note che scendono piano: nuovo giro più lento di tutti. Il primato conta più della media, e la media conta più del confronto con il precedente.
+Con f arrivano le statistiche: quanti giri, il più veloce e il più lento con il loro numero, e se due sono a pari merito lo dice, la differenza fra i due, la media, la mediana, lo scarto medio dalla media in tempo e in percentuale, il tempo totale dei giri. Servono almeno due giri.
+Con s chiudi l'ultimo giro e fermi il cronometro. Con a lo riprendi. Con z, a cronometro fermo, salvi il report e riparti da zero. Con q salvi il report ed esci.
+4. Il report della sessione
+Quando esci con q, o azzeri con z, se il cronometro è partito almeno una volta il programma chiede una nota, che puoi lasciare vuota, e scrive un file di testo nella cartella del programma, accanto all'eseguibile. Il nome è Meditimer seguito da data e ora, per esempio Meditimer-260911-083312.txt. Dentro ci sono la versione, la data, tutti i giri con le loro frasi, le statistiche, il tempo trascorso, il tempo di esecuzione del programma e la nota. Una frase per riga, senza decorazioni.
+5. Timer e sveglie
+Con x imposti un timer scrivendo una durata: secondi, oppure minuti:secondi, oppure ore:minuti:secondi. Per esempio 90 sono novanta secondi, 2:30 sono due minuti e mezzo, 1:15:00 è un'ora e un quarto. Invio senza scrivere niente annulla.
+Con w imposti una sveglia scrivendo un orario, in uno di questi modi.
+13:02, oppure 13:02:30, è quell'orario esatto, oggi se deve ancora arrivare, altrimenti domani.
+13, cioè un numero solo di due cifre che sia un'ora valida da 00 a 23, sono le tredici in punto.
+5, cioè un numero solo da 0 a 59 che non sia un'ora scritta con due cifre, è il minuto 5 dell'ora in corso, o della prossima se è già passato: alle otto e trentatré, 5 vuol dire le nove e cinque, e 45 vuol dire le otto e quarantacinque.
++5 è fra cinque minuti. +2:08 è fra due ore e otto minuti. +0:0:30 è fra trenta secondi.
+Timer e sveglie sono numerati in ordine di creazione. Appena impostati il programma conferma l'orario a cui suoneranno. Con l li elenchi tutti, con l'orario di scadenza e quanto manca, e puoi scrivere il numero di uno da annullare, oppure invio per non annullare niente.
+Quando uno scade il programma lo dice, con l'ora, e parte la suoneria: due campane alternate, ripetute a serie, per una cinquantina di secondi. Un tasto qualsiasi la zittisce subito, e quel tasto non fa altro. Puoi impostare quanti timer e quante sveglie vuoi; se ne scadono due insieme si sentono insieme. Se la macchina è stata sospesa, la sveglia suona lo stesso all'orario giusto, appena la macchina si sveglia.
+Uscendo dal programma i timer e le sveglie in attesa vengono annullati.
+6. Il banco di prova
+Con b misuri quanto è veloce la macchina. Prima scegli la durata: b breve, n normale, l lunga, invio per normale. Il profilo normale dura circa un minuto e mezzo; il breve la metà, il lungo il doppio. Le velocità misurate non dipendono dalla durata, ma con il profilo lungo sono più stabili. Durante la prova non usare il computer, e chiudi i programmi pesanti. Fra una fase e l'altra escape annulla tutto senza salvare.
+Le fasi sono nove, e ognuna viene annunciata all'inizio, con il suo suono, e riassunta alla fine con il risultato.
+Fasi da 1 a 3: calcoli su interi, calcoli su decimali e funzioni matematiche su tutti i processori logici insieme. Il risultato è in operazioni al secondo, sommando tutti i processi. Sono le stesse tre prove delle versioni precedenti, quindi i numeri si confrontano con quelli già in archivio.
+Fasi da 4 a 6: le stesse tre prove su un processore solo. Il programma dice anche il fattore di scala, cioè quante volte la macchina va più veloce con tutti i processori rispetto a uno: su una macchina con trentadue processori logici un fattore di venti dice che il parallelismo rende bene, un fattore di dieci dice che con tutti i core al lavoro il processore rallenta molto, per il calore o per un limite di potenza.
+Fase 7: copia in memoria su un core, con blocchi da 128 megabyte, molto più grandi della cache del processore, così a essere misurata è davvero la memoria. Il risultato è in gigabyte al secondo copiati.
+Fase 8: la stessa copia su tutti i processori insieme, con blocchi più piccoli per non riempire la memoria. Misura la banda totale del controller di memoria, ed è il numero che cambia quando si cambia la frequenza della RAM.
+Fase 9: il disco. Il programma scrive un file temporaneo di 256 megabyte nella propria cartella, aspettando che sia davvero sul disco e non nella cache di scrittura, poi lo rilegge e lo cancella, due volte, tenendo la passata migliore. Su Windows la rilettura scavalca la cache del sistema; dove non ci riesce il programma lo dice, perché una lettura dalla cache non misura il disco. I risultati sono in megabyte al secondo. Sui dischi a stato solido la scrittura dipende molto dallo stato della cache interna del disco e può cambiare di parecchio da una prova all'altra: è il disco, non il programma.
+I risultati per processore non vengono elencati uno per uno: per ogni prova su tutti i processori il programma dice il totale, il più lento e il più veloce dei processi, la media e la dispersione, cioè quanto i processi si discostano fra loro in percentuale. Se un processo si scosta dalla mediana più del venti per cento viene detto a parte, come fuori norma, con il suo scarto; se sono più di cinque vengono riassunti in quanti stanno sotto e quanti sopra, con gli scarti estremi. La soglia è larga apposta: su un processore con core prestazionali ed efficienti i secondi stanno sotto i primi di un dieci per cento sistematico, e quella è una caratteristica che la dispersione racconta già, non un'anomalia. I numeri di ogni singolo processo restano comunque nel file del report e nell'archivio.
+Con ogni prova viene salvata la scheda della macchina: nome, processore, core fisici e processori logici, frequenza, memoria, sistema operativo, versione di Python e, sui portatili, se la prova è stata fatta a batteria o con la rete. Le prove misurano l'interprete Python tanto quanto il processore, quindi la versione di Python conta: è per questo che viene scritta.
+Se sulla macchina è in esecuzione HWiNFO in modalità Sensors-only con Shared Memory Support attivo, durante le prove del processore il programma legge i sensori e riporta la potenza media e massima del pacchetto, le temperature massime, i clock medi dei core prestazionali ed efficienti e gli eventuali limiti scattati. È quello che serve per distinguere un processore frenato dal calore da uno frenato dal profilo di potenza. Senza HWiNFO la riga dei sensori manca e basta.
+Alla fine il programma legge il resoconto, poi confronta la prova con le precedenti della stessa macchina: per ogni misura dice quanto è cambiata rispetto alla prova precedente e se è un nuovo primato della macchina, con il suo suono, e a che posto sta la macchina in ogni classifica. Poi chiede una nota, per esempio prima del BIOS nuovo, salva la prova nell'archivio e scrive un file di testo con il resoconto, benchmark seguito dal nome del computer e dalla data, nella cartella del programma.
+7. L'archivio e le classifiche
+L'archivio è il file benchmark_results.json nella cartella del programma. Per ogni macchina tiene la scheda e tutte le prove fatte, con la loro data: niente viene sovrascritto. Il file delle versioni precedenti, che aveva una prova sola per macchina, viene letto e convertito da solo. A ogni salvataggio la versione precedente resta accanto, con lo stesso nome e l'estensione bak.
+Con n leggi quattro classifiche fra le macchine dell'archivio: multi core, un processore, memoria e disco. In ogni classifica ogni macchina compare con la sua prova migliore. Le due classifiche del processore ordinano per la media geometrica delle tre prove, interi, decimali e funzioni matematiche, e mostrano i tre valori; la memoria ordina per la copia su tutti i processori e mostra anche quella su un core; il disco ordina per la media di scrittura e lettura e mostra entrambe. Ogni riga ha tre blocchi da quaranta caratteri: posizione, nome e data della prova; il valore che decide la classifica; il dettaglio. In fondo, due conti sull'archivio: quante prove e quante macchine, dalla prima all'ultima, il rapporto fra la macchina più veloce e la più lenta, e la macchina con più prove.
+Per confrontare macchine diverse basta portare il file benchmark_results.json da una all'altra, nella cartella del programma, e fare la prova anche lì: l'archivio accoglie le prove di tutte, e la classifica le mette in fila.
+8. I suoni
+I suoni sono nella collezione condivisa del parco software di IZ4APU, Acu_Collection.json, e viaggiano dentro l'eseguibile. Sono tutti brevi e morbidi, per lo più sinusoidi; il solo suono fatto per farsi notare è la suoneria di timer e sveglie. Oltre ai suoni dei giri, descritti al punto 3, ce n'è uno per l'avvio e l'uscita del programma, per l'avvio, la pausa, la ripresa, lo stop e l'azzeramento del cronometro, per le statistiche, la data, l'ora, i due tempi, per timer e sveglie impostati, elencati e annullati, per la suoneria e il suo silenziamento, per il report salvato, per ogni fase del banco di prova, per la prova conclusa, annullata e salvata, per il primato della macchina, per le classifiche, per il manuale, per un tasto non previsto e per un dato scritto male. Se la scheda audio manca o non risponde il programma resta muto e funziona lo stesso; la suoneria, in quel caso, usa il campanello del terminale.
+9. I file
+Nella cartella del programma, accanto all'eseguibile, nascono i report delle sessioni, Meditimer seguito da data e ora, i report delle prove, benchmark seguito da nome del computer e data, l'archivio benchmark_results.json con la sua copia bak, e durante la prova del disco un file temporaneo che viene cancellato subito dopo. Il programma dice sempre il nome del file e la cartella in cui l'ha scritto, e se non riesce a scrivere lo dice, senza perdere la sessione.
+10. Requisiti
+L'eseguibile per Windows non richiede niente. All'avvio, se c'è una versione nuova su GitHub, il programma lo dice e propone di installarla.
+Dal codice sorgente servono Python 3.10 o successivo, la libreria GBUtils di IZ4APU con la sua collezione dei suoni, e i pacchetti elencati in requirements.txt: numpy, scipy e sounddevice per l'audio, requests per gli aggiornamenti, psutil facoltativo per la scheda della macchina.
+Meditimer è scritto per Windows; il cronometro, i timer, le sveglie e il banco di prova funzionano anche su Linux e macOS, dove però la rilettura del disco passa dalla cache del sistema e i sensori di HWiNFO non ci sono.

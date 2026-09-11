@@ -1,104 +1,59 @@
-# Meditimer
+# Meditimer, l'affetta tempo
 
-Un cronometro semplice, potente e accessibile da riga di comando (CLI). Progettato per essere leggero e funzionale, Meditimer permette di cronometrare tempi, registrare giri e salvare report dettagliati. Include anche una potente funzione di **benchmark** per testare le prestazioni della CPU, un **timer** per conti alla rovescia e una **sveglia** programmabile.
+Un cronometro da riga di comando, pensato per chi usa uno screen reader e un display braille. Registra i giri e li confronta fra loro, tiene timer e sveglie, misura quanto è veloce il computer su cui gira e conserva i risultati per mettere in classifica le tue macchine. Ogni comando è un tasto solo, senza invio, e ogni tasto ha il suo suono.
 
-L'interfaccia testuale lo rende perfettamente compatibile con gli screen reader, garantendo la piena accessibilità.
+Autori: Gabriele Battaglia (IZ4APU) & ClaudIA (Claude Fable 5.1, UltraCode). Versione 3.0.0 del 11 settembre 2026. Il manuale completo è il file `manuale.txt`, che si legge anche dentro il programma con il tasto m; le novità di ogni versione stanno in `CHANGELOG.md`.
 
-**by Gabriele Battaglia (IZ4APU)**
+## Che cosa fa
 
-## Funzionalità
+- Cronometro con giri: ogni giro viene detto a parole, con la variazione in percentuale rispetto al giro precedente e alla media, e con un suono diverso a seconda che sia più veloce, più lento, nella media o un nuovo primato. Le pause non entrano nei giri.
+- Statistiche dei giri: il più veloce e il più lento, la differenza, la media, la mediana, lo scarto medio, il totale.
+- Report di ogni sessione in un file di testo, una frase per riga.
+- Timer e sveglie quanti ne vuoi, con elenco, annullamento e una suoneria che si zittisce con un tasto qualsiasi. La sveglia si scrive come 13:02, oppure 13 per le tredici, 5 per il minuto cinque, +5 per fra cinque minuti.
+- Banco di prova della macchina in nove fasi: interi, decimali e funzioni matematiche su tutti i processori e su uno solo, copia in memoria su un core e su tutti, scrittura e lettura del disco. Con la scheda della macchina e, se HWiNFO è in esecuzione, potenza, temperature e clock del processore durante la prova.
+- Archivio delle prove con la cronologia di ogni macchina, confronto con le prove precedenti, primati, e quattro classifiche fra le macchine.
 
-  * **Cronometro completo:** Avvio, pausa, stop e azzeramento.
-  * **Registrazione Giri:** Registra tempi parziali (giri) con la pressione di un tasto.
-  * **Analisi Giri:** Calcola e mostra automaticamente il giro più veloce e quello più lento.
-  * **Timer e Sveglia:** Imposta timer multipli per conti alla rovescia o sveglie per orari specifici. I thread in background garantiscono che queste funzioni non interferiscano con il cronometro.
-  * **Benchmark CPU:** Esegue un test di performance multi-core per misurare la potenza di calcolo del tuo sistema.
-  * **Classifiche Benchmark:** Confronta i risultati dei tuoi test con quelli di altre macchine grazie a classifiche ordinate salvate localmente.
-  * **Informazioni Rapide:** Visualizza data, ora e tempo trascorso in qualsiasi momento.
-  * **Report Automatico:** Salva un report di testo dettagliato per il cronometro e i risultati dei benchmark.
+## Scaricare e avviare
 
-## Requisiti
+L'eseguibile per Windows è nell'ultima release su GitHub: https://github.com/GabrieleBattaglia/meditimer/releases/latest. Si scarica l'archivio, si estrae dove si vuole e si avvia `meditimer.exe`. Non serve installare niente. Al primo avvio Windows può mostrare l'avviso di SmartScreen, perché l'eseguibile non è firmato: è normale. All'avvio il programma controlla se c'è una versione nuova e propone di installarla.
 
-  * **Python 3** (versione 3.8 o successiva consigliata).
-  * **Nessuna dipendenza esterna.** Il programma utilizza solo librerie standard di Python, quindi non è richiesta l'installazione di pacchetti aggiuntivi.
+Dal codice sorgente:
 
-## Installazione e Avvio
+1. Serve Python 3.10 o successivo.
+2. Serve GBUtils, la libreria condivisa di IZ4APU, con la sua collezione dei suoni: `git clone https://github.com/GabrieleBattaglia/GBUtils.git` e poi la sua cartella in PYTHONPATH, oppure `GBUtils.py` e `Acu_Collection.json` copiati accanto a `meditimer.py`.
+3. `pip install -r requirements.txt` per numpy, scipy, sounddevice, requests e, facoltativo, psutil.
+4. `python meditimer.py`.
 
-Puoi scaricare l'eseguibile da github dal link [www.github.com/GabrieleBattaglia/meditimer.git](https://www.google.com/search?q=https://www.github.com/GabrieleBattaglia/meditimer.git)
-Oppure segui questa procedura per lanciarlo da sorgente Python.
+## I comandi
 
-1.  Assicurati di avere Python installato sul tuo computer.
-2.  Salva il file `meditimer.py` in una cartella a tua scelta.
-3.  Apri un terminale (Prompt dei comandi su Windows, Terminale su macOS/Linux).
-4.  Naviga fino alla cartella dove hai salvato il file usando il comando `cd NOME_CARTELLA`.
-5.  Esegui il programma con il comando:
-    ```
-    python meditimer.py
-    ```
+- a: avvia il cronometro, lo mette in pausa, lo riprende.
+- spazio: registra un giro.
+- s: registra l'ultimo giro e ferma il cronometro.
+- f: statistiche dei giri.
+- c: tempo trascorso.
+- z: salva il report e azzera, a cronometro fermo.
+- x: imposta un timer, per esempio 90, 2:30 oppure 1:15:00.
+- w: imposta una sveglia, per esempio 13:02, 13, 5 oppure +5.
+- l: elenca timer e sveglie, e ne annulla uno.
+- d: la data di oggi.
+- o: l'ora.
+- v: da quanto tempo gira il programma.
+- b: banco di prova della macchina.
+- n: classifiche dei banchi di prova.
+- m: il manuale.
+- ?: l'elenco dei comandi.
+- q: salva il report ed esce. Anche Ctrl più C.
 
-## Comandi (Tasti Rapidi)
+## I file
 
-All'avvio del programma, puoi usare i seguenti tasti per controllarlo. Non è necessario premere Invio.
+Tutto nasce nella cartella del programma, accanto all'eseguibile: i report delle sessioni, `Meditimer` seguito da data e ora; i report delle prove, `benchmark` seguito dal nome del computer e dalla data; l'archivio `benchmark_results.json`, con la copia di riserva `.bak`. Per confrontare macchine diverse basta portare l'archivio da una all'altra e fare la prova anche lì.
 
-| Tasto | Azione | Descrizione |
-|:---:|---|---|
-| **`a`** | Avvia / Pausa | Avvia il cronometro se è fermo, lo mette in pausa se è in esecuzione, o lo riprende se è in pausa. |
-| **`s`** | Ferma (Stop) | Interrompe il cronometro. Equivale a metterlo in pausa. |
-| **`z`** | Azzera | Resetta il cronometro e tutti i giri registrati. Funziona solo se il cronometro è fermo. |
-| **`g`** | Registra Giro | Salva il tempo parziale dall'ultimo giro (o dall'inizio) senza fermare il cronometro. |
-| **`c`** | Tempo Trascorso | Mostra il tempo totale misurato dal cronometro. |
-| **`d`** | Mostra Data | Visualizza la data corrente. |
-| **`o`** | Mostra Ora | Visualizza l'ora corrente. |
-| **`v`** | Tempo Esecuzione | Mostra da quanto tempo è in esecuzione il programma Meditimer. |
-| **`b`** | **Benchmark CPU** | Avvia il test di velocità del computer (vedi sezione dedicata). |
-| **`n`** | **Classifiche** | Mostra le classifiche dei risultati dei benchmark salvati. |
-| **`x`** | **Imposta Timer** | Avvia un conto alla rovescia. Al termine, emette un segnale acustico. |
-| **`w`** | **Imposta Sveglia** | Imposta una sveglia per un orario specifico. Al termine, emette un segnale acustico. |
-| **`q`** | Esci e Salva | Chiude il programma e salva il report del cronometro (se utilizzato) in un file di testo. |
-| **`?`** | Aiuto | Mostra la lista dei comandi disponibili direttamente nel terminale. |
+## Accessibilità
 
-## Funzioni Avanzate
+Output lineare, senza tabelle, righe di trattini o animazioni. Ogni messaggio va a capo prima e non dopo, così il display braille resta sull'ultima riga scritta. Le righe con più dati sono in blocchi di quaranta caratteri. Tutto ciò che si vede si sente anche, e tutto ciò che si sente è scritto.
 
-#### Funzione di Benchmark
+## Sviluppo
 
-Premendo il tasto **`b`**, avvierai un test di performance che misura la potenza di calcolo della tua CPU.
+I moduli: `meditimer.py` è il ciclo dei tasti, `cronometro.py` il cronometro, `sveglie.py` timer e sveglie, `banco_prova.py` le misure, `sensori.py` la lettura di HWiNFO, `classifiche.py` l'archivio, `suoni.py` la mappa dei suoni, `formati.py` i formati, `percorsi.py` i percorsi, `version.py` la versione. Le prove automatiche stanno in `tests`, si eseguono con `python -m pytest tests -q`, e il codice passa `ruff check` con la configurazione di `ruff.toml`. `ascolta_suoni.py` fa sentire i suoni uno per uno. `meditimer.spec` compila con PyInstaller un eseguibile in un file unico, e `zip_maker.py` prepara l'archivio della release.
 
-  * **Multipiattaforma e Multi-Core:** Il test è progettato per sfruttare tutti i core del tuo processore.
-  * **Tre Fasi Separate:** Esegue tre test distinti e sequenziali da 10 secondi ciascuno per misurare diverse aree di performance:
-    1.  **Calcoli su Interi:** Operazioni aritmetiche base.
-    2.  **Calcoli su Float:** Operazioni con numeri decimali.
-    3.  **Funzioni Matematiche:** Calcoli complessi (`sqrt`, `sin`).
-  * **Salvataggio Automatico:** Al termine, i risultati vengono mostrati a schermo, salvati in un file `.txt` e aggiunti al file `benchmark_results.json` per alimentare le classifiche.
-
-#### Classifiche Benchmark
-
-Premendo il tasto **`n`**, puoi visualizzare le classifiche di tutti i benchmark eseguiti e salvati.
-
-  * **Tre Classifiche:** Viene mostrata una classifica per ognuna delle tre tipologie di test (Interi, Float, Matematiche).
-  * **Ordinamento:** Le macchine sono ordinate dalla più veloce alla più lenta in base alle "operazioni al secondo" (op/s).
-  * **Dettagli:** Ogni riga della classifica riporta posizione, nome del computer, velocità, data del test e note dell'utente.
-
-#### Timer e Sveglia
-
-I comandi **`x`** (timer) e **`w`** (sveglia) ti permettono di impostare avvisi acustici in background.
-
-  * **Input Intelligente:** Puoi specificare la durata o l'orario in formati flessibili:
-      * `35` = 35 secondi (solo per il timer).
-      * `2:35` = 2 minuti e 35 secondi.
-      * `3:3:35` = 3 ore, 3 minuti e 35 secondi.
-  * **Esecuzione in Background:** Grazie al multithreading, puoi impostare timer e sveglie multiple senza interrompere il cronometro principale.
-  * **Avviso Acustico:** Al termine, il programma emetterà una sequenza di beep di sistema.
-
-## Report e Dati
-
-Meditimer genera automaticamente tre tipi di file nella sua cartella:
-
-1.  **Report Cronometro (`.txt`):** Creato quando si esce con `q` (solo se il cronometro è stato usato). Contiene il riepilogo dei giri, i tempi totali e le statistiche.
-2.  **Report Benchmark (`.txt`):** Creato dopo ogni test con `b`. Contiene i dettagli del sistema e i risultati del test di performance.
-3.  **Database Classifiche (`.json`):** Il file `benchmark_results.json` contiene i dati strutturati di tutti i benchmark eseguiti. Viene letto dal programma per generare le classifiche e aggiornato ogni volta che si esegue un nuovo test.
-Per mettere in classifica e confrontare le tue diverse macchine ad esempio, o quelle dei tuoi amici, o quelle su cui stai facendo dei test, sposta il file .json generato da meditimer su una diversa copia del programma, su un diverso computer, poi esegui meditimer e fagli eseguire il test velocità premendo la b. Al termine osserva le classifiche premendo la n.
-
-## Compatibilità e Accessibilità
-
-  * **Multipiattaforma (Cross-Platform)**: Il codice è pienamente compatibile con **Windows** e sistemi **Unix-like (Linux, macOS)**.
-  * **Accessibilità**: Essendo un'applicazione a riga di comando con output testuale pulito, Meditimer è pienamente utilizzabile con gli screen reader (come JAWS, NVDA o VoiceOver) per garantire un'esperienza utente ottimale anche per le persone non vedenti.
+Licenza: GPL 3, vedi `LICENSE`.
