@@ -15,14 +15,16 @@ e li' va cercato per primo.
 """
 
 import os
-import sys
+
+from GBUtils import cartella_applicazione
+from GBUtils import percorso_risorsa as percorso_risorsa_condivisa
 
 
 def cartella_programma():
-    """La cartella dell'eseguibile compilato, oppure quella del sorgente."""
-    if getattr(sys, "frozen", False):
-        return os.path.dirname(os.path.abspath(sys.executable))
-    return os.path.dirname(os.path.abspath(__file__))
+    """La cartella dell'eseguibile compilato, oppure quella del sorgente.
+    La logica sta in GBUtils, come tutte le utilita' condivise: qui restano i
+    nomi con cui Meditimer la chiama."""
+    return cartella_applicazione()
 
 
 def percorso_dati(nome):
@@ -32,8 +34,4 @@ def percorso_dati(nome):
 
 def percorso_risorsa(nome):
     """Un file in sola lettura, come il manuale: da compilato sta dentro il pacchetto."""
-    if getattr(sys, "frozen", False):
-        base = getattr(sys, "_MEIPASS", None)
-        if base and os.path.isfile(os.path.join(base, nome)):
-            return os.path.join(base, nome)
-    return percorso_dati(nome)
+    return percorso_risorsa_condivisa(nome)

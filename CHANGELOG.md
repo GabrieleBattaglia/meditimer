@@ -3,6 +3,10 @@
 Tutti i cambiamenti e le novità introdotte nelle versioni di Meditimer.
 Il changelog nasce con la versione 3.0.0. Per le versioni precedenti il resoconto sta nella cronologia dei commit e nelle release pubblicate su GitHub.
 
+## [3.0.1] - 2026-09-12
+
+I percorsi dei file passano da GBUtils, che dalla V138 li offre a tutti con cartella_applicazione e percorso_risorsa: la logica che dice dove stanno i dati e le risorse era riscritta in dieci progetti, e adesso e' scritta in un posto solo. Il comportamento non cambia, tranne che una risorsa che nel pacchetto non c'e' viene ora cercata anche accanto all'eseguibile.
+
 ## [3.0.0] - 2026-09-11
 
 Pubblicata su GitHub il 2026-09-11 come release `v3.0.0`, con il solo archivio `meditimer.zip` in allegato. Issue 1 chiusa.
