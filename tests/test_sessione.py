@@ -9,6 +9,7 @@ import pytest
 
 import meditimer
 import suoni
+from version import VERSION
 
 
 class Copione:
@@ -181,7 +182,7 @@ def test_banco_di_prova_salva_archivio_e_report(banco, tmp_path, capsys, monkeyp
     copione = banco(["b", "b", "b", "\r", "n", "b", "\x1b", "q"], ["prima prova", "seconda prova"])
     assert meditimer.main() == 0
     uscita = capsys.readouterr().out
-    assert chiamate == [("breve", str(tmp_path), "3.0.0"), ("normale", str(tmp_path), "3.0.0")]
+    assert chiamate == [("breve", str(tmp_path), VERSION), ("normale", str(tmp_path), VERSION)]
     assert "Banco di prova, profilo breve: nove fasi, circa" in uscita
     assert "Banco di prova di Meditimer 3.0.0, profilo breve," in uscita
     assert "Macchina: Finta, Finto 9000, 2 processori logici." in uscita

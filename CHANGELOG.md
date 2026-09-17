@@ -3,6 +3,12 @@
 Tutti i cambiamenti e le novità introdotte nelle versioni di Meditimer.
 Il changelog nasce con la versione 3.0.0. Per le versioni precedenti il resoconto sta nella cronologia dei commit e nelle release pubblicate su GitHub.
 
+## [3.0.2] - 2026-09-17
+
+L'eseguibile passa da 125 a 68 megabyte, il quarantasei per cento in meno. Nel pacchetto entravano matplotlib, PyQt6 e tkinter, che meditimer non nomina in nessuna riga: arrivavano dietro alle librerie di calcolo, e matplotlib si portava i suoi due backend grafici. Sono usciti tutti; numpy e scipy restano, perche' sono le librerie con cui Acusticator genera i suoni, e la collezione dei preset e' al suo posto.
+
+Una prova della suite teneva il numero di versione scritto a mano, e falliva a ogni cambio di versione: e' successo con la 3.0.1, e da allora la suite non passava piu'. Adesso legge `VERSION` da version.py, come fa il programma. Le altre volte in cui un numero di versione compare nelle prove sono dati finti passati alle funzioni, e quelle restano come sono.
+
 ## [3.0.1] - 2026-09-12
 
 I percorsi dei file passano da GBUtils, che dalla V138 li offre a tutti con cartella_applicazione e percorso_risorsa: la logica che dice dove stanno i dati e le risorse era riscritta in dieci progetti, e adesso e' scritta in un posto solo. Il comportamento non cambia, tranne che una risorsa che nel pacchetto non c'e' viene ora cercata anche accanto all'eseguibile.

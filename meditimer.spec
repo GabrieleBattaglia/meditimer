@@ -20,7 +20,14 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    # Peso morto: matplotlib arriva dietro alle librerie di calcolo e si
+    # porta i backend Tk e Qt, che qui non servono a nessuno perche' il
+    # programma e' a console e non disegna niente. numpy e scipy invece
+    # restano: sono le librerie con cui Acusticator genera i suoni.
+    excludes=[
+        'matplotlib', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'tkinter',
+        'pandas', 'IPython', 'jupyter', 'notebook',
+    ],
     noarchive=False,
     optimize=0,
 )
