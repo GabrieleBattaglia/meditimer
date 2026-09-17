@@ -6,7 +6,8 @@
 
 """I percorsi di Meditimer.
 
-Due regole, prese dal memorandum sui percorsi in docs. Cio' che il programma
+Due regole, che stanno scritte per esteso nelle docstring di
+cartella_applicazione e percorso_risorsa di GBUtils. Cio' che il programma
 scrive, cioe' i report e il file delle classifiche, sta accanto al programma:
 accanto all'eseguibile quando e' compilato, accanto ai sorgenti altrimenti.
 Cio' che il programma legge soltanto, cioe' il manuale, da compilato viaggia
